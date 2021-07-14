@@ -7,7 +7,8 @@ from . import constants
 from .grid_map import GridMap
 from .controller import launch_controller
 from .agent import reachable_thor_loc2d
-from .utils import remap
+from .utils import remap, euclidean_dist
+
 
 def robothor_scene_names(scene_type="Train", levels=None, nums=None):
     scenes = []
@@ -260,7 +261,7 @@ class SceneDataset:
                 continue
             scene_name, init_poses_seed = m
             try:
-                scene_info = cls.load_scene(rootdir, scene_name_with_seed)
+                scene_info = cls.load_single(rootdir, scene_name_with_seed)
                 if scene_name not in scenes:
                     scenes[scene_name] = {}
                 scenes[scene_name][init_poses_seed] = scene_info
