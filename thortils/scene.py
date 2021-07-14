@@ -1,10 +1,13 @@
 import re
 import os
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
 from . import constants
 from .grid_map import GridMap
 from .controller import launch_controller
 from .agent import reachable_thor_loc2d
+from .utils import remap
 
 def robothor_scene_names(scene_type="Train", levels=None, nums=None):
     scenes = []
@@ -207,7 +210,6 @@ class ThorSceneInfo:
         ax.set_title("{} (seed={})".format(self.scene_name, self.seed))
 
 
-
 class SceneDataset:
     """A scene dataset consists of multiple scenes (i.e. ThorSceneInfo objects)"""
     def __init__(self, scene_infos):
@@ -225,7 +227,22 @@ class SceneDataset:
         return scene_name in self._infos
 
     @classmethod
-    def load(cls, rootdir):
+    def load_single(cls, rootdir, scene_name_with_seed):
+        if "-" not in scene_name_with_seed:
+            # There is no seed in the supplied scene name
+            scene_name_with_seed += "-default"
+
+        scene_pickle_file = SceneDataset.scene_info_file(rootdir, scene_name_with_seed)
+        try:
+            with open(scene_pickle_file, "rb") as f:
+                scene_info = ThorSceneInfo.from_json(pickle.load(f))
+            return scene_info
+        except FileNotFoundError as ex:
+            print("{} not found".format(scene_pickle_file))
+            raise ex
+
+    @classmethod
+    def load(cls, rootdir, pass_if_not_found=True):
         """
         Args:
             rootdir (str): The directory where this dataset is stored
@@ -242,18 +259,14 @@ class SceneDataset:
             if m is None:
                 continue
             scene_name, init_poses_seed = m
-            scene_pickle_file = SceneDataset.scene_info_file(rootdir, scene_name_with_seed)
             try:
-                with open(scene_pickle_file, "rb") as f:
-                    scene_info = ThorSceneInfo.from_json(pickle.load(f))
-
+                scene_info = cls.load_scene(rootdir, scene_name_with_seed)
                 if scene_name not in scenes:
                     scenes[scene_name] = {}
                 scenes[scene_name][init_poses_seed] = scene_info
-
             except FileNotFoundError:
-                print("{} not found".format(scene_pickle_file))
-                pass
+                if pass_if_not_found:
+                    pass
         return SceneDataset(scenes)
 
     @staticmethod
