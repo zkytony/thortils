@@ -1,4 +1,5 @@
-from . import thor_get, _resolve
+import numpy as np
+from .controller import thor_get, _resolve
 
 def reachable_thor_loc2d(controller):
     """
