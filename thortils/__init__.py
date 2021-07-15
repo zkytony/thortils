@@ -21,4 +21,5 @@ from .scene import (robothor_scene_names, ithor_scene_names,
                     convert_scene_to_grid_map)
 
 
+# Please make sure this is correct.
 AI2THOR_VERSION = '3.3.4'

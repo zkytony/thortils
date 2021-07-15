@@ -12,8 +12,8 @@ def PickupObject(controller, objectId):
                            objectId=objectId)
 
 def DropObject(controller, objectId):
-    return controller.step(action="DropHandObject",
-                           objectId=objectId)
+    # Note: In version 3.3.4, this action takes no objectId argument.
+    return controller.step(action="DropHandObject")
 
 def ToggleObjectOn(controller, objectId):
     return controller.step(action="ToggleObjectOn",
