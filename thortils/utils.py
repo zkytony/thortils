@@ -39,3 +39,26 @@ def nice_timestr(dtobj=None):
 
     localtime = pytz_reference.LocalTimezone()
     return dtobj.strftime("%a, %d-%b-%Y %I:%M:%S, " + localtime.tzname(dtobj))
+
+
+class Valuable:
+    """A piece of data with value"""
+    def __init__(self, data, value):
+        self.data = data
+        self.value = value
+    def __lt__(self, other):
+        return self.value < other.value
+    def __le__(self, other):
+        return self.value <= other.value
+    def __eq__(self, other):
+        if isinstance(other, Valuable):
+            return self.value == other.value
+        return False
+    def __ne__(self, other):
+        return self.value != other.value
+    def __gt__(self, other):
+        return self.value > other.value
+    def __ge__(self, other):
+        return self.value >= other.value
+    def __hash__(self):
+        return hash(self.data)

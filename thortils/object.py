@@ -1,8 +1,32 @@
+import math
+from typing import Tuple, Dict, List, Set, Union, Any, Optional, Mapping, cast
+
 from . import constants
 from .controller import thor_get, _resolve
-from .agent import thor_agent_pose
+from .agent import thor_agent_pose, thor_agent_position
 from .utils import euclidean_dist
 
+def thor_object_with_id(event_or_controller, object_id):
+    event = _resolve(event_or_controller)
+    thor_objects = thor_get(event, "objects")
+    try:
+        obj = list(filter(lambda obj: obj["objectId"] == object_id, thor_objects))[0]
+        return obj
+    except IndexError as ex:
+        print("Object {} does not exist.".format(object_id))
+        raise ex
+
+def thor_object_pose(event_or_controller, object_id, as_tuple=True):
+    """For objects, pose == position"""
+    obj = thor_object_with_id(event_or_controller, object_id)
+    p = obj["position"]
+    if as_tuple:
+        return (p["x"], p["y"], p["z"])
+    else:
+        return p
+
+def thor_object_position(event_or_controller, object_id, as_tuple=True):
+    return thor_object_pose(event_or_controller, object_id, as_tuple=as_tuple)
 
 def thor_object_poses(event_or_controller, object_type):
     """Returns a dictionary id->pose
@@ -132,3 +156,58 @@ def get_object_mask_pixels(event_or_controller, objects=None, center_only=False)
         bboxes2D[object_id] = bboxes2D[object_id].tolist()
 
     return bboxes2D
+
+def thor_closest_object_with_properties(event_or_controller, properties):
+    """
+    Exactly the same as https://github.com/allenai/allenact/blob/6b98c325251d5629c01c463792683c40279f5821/allenact_plugins/ithor_plugin/ithor_environment.py#L766
+
+    Returns the object closest to the given pose that
+    satisfy the given properties. `properties` is a dictionary
+    mapping from attribute name to value
+    """
+    event = _resolve(event_or_controller)
+    agent_pos = thor_agent_position(event)
+    min_dist = float("inf")
+    closest = None
+    for o in thor_get(event, "objects"):
+        satisfies_all = True
+        for k, v in properties.items():
+            if o[k] != v:
+                satisfies_all = False
+                break
+        if satisfies_all:
+            d = position_dist(agent_pos, o["position"])
+            if d < min_dist:
+                min_dist = d
+                closest = o
+    return closest
+
+def thor_closest_object_of_type(event_or_controller, object_type):
+    """
+    https://github.com/allenai/allenact/blob/6b98c325251d5629c01c463792683c40279f5821/allenact_plugins/ithor_plugin/ithor_environment.py#L795
+    """
+    properties = {"objectType": object_type}
+    return thor_closest_object_with_properties(event_or_controller,
+                                               properties)
+
+
+def position_dist(
+    p0: Mapping[str, Any],
+    p1: Mapping[str, Any],
+    ignore_y: bool = False,
+    l1_dist: bool = False,
+) -> float:
+    """Distance between two points of the form {"x": x, "y":y, "z":z"}.
+    https://github.com/allenai/allenact/blob/6b98c325251d5629c01c463792683c40279f5821/allenact_plugins/ithor_plugin/ithor_environment.py#L726"""
+    if l1_dist:
+        return (
+            abs(p0["x"] - p1["x"])
+            + (0 if ignore_y else abs(p0["y"] - p1["y"]))
+            + abs(p0["z"] - p1["z"])
+        )
+    else:
+        return math.sqrt(
+            (p0["x"] - p1["x"]) ** 2
+            + (0 if ignore_y else (p0["y"] - p1["y"]) ** 2)
+            + (p0["z"] - p1["z"]) ** 2
+        )
