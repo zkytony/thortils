@@ -102,7 +102,6 @@ MOVEMENT_PARAMS = {"MoveAhead"  :  {"moveMagnitude": MOVE_STEP_SIZE},
                    "RotateRight":  {"degrees": H_ROTATION}}
 MOVEMENTS = list(MOVEMENT_PARAMS.keys())
 
-
 def get_acceptable_thor_actions():
     return MOVEMENTS + INTERACTIONS
 

@@ -18,8 +18,8 @@
 
 import math
 from collections import deque
-from .utils import PriorityQueue, euclidean_dist, to_radians
-from .constants import MOVEMENT_PARAMS
+from .utils import PriorityQueue, euclidean_dist, to_radians, to_degrees
+from .constants import MOVEMENTS, MOVEMENT_PARAMS
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
     """movement (str), a key in the constants.MOVEMENT_PARAMS dictionary
@@ -34,9 +34,15 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
     if "moveMagnitude" in params:
         forward = params["moveMagnitude"]
     if "degrees" in params and movement.startswith("Rotate"):
-        h_angle = to_radians(params["degrees"])
+        if movement == "RotateLeft":
+            h_angle = to_radians(params["degrees"])
+        else:
+            h_angle = -to_radians(params["degrees"])
     if "degrees" in params and movement.startswith("Look"):
-        v_angle = to_radians(params["degrees"])
+        if movement == "LookUp":
+            v_angle = to_radians(params["degrees"])
+        else:
+            v_angle = -to_radians(params["degrees"])
     return (movement, (forward, h_angle, v_angle))
 
 def get_navigation_actions(movement_params=MOVEMENT_PARAMS):
@@ -128,14 +134,17 @@ def _nav_heuristic(pose, goal):
     pose tuple(position, rotation); goal tuple(position, rotation)"""
     return euclidean_dist(pose[0], goal[0])
 
-def _reconstruct_plan(comefrom, end_node):
+def _reconstruct_plan(comefrom, end_node, return_pose=True):
     """Returns the plan from start to end_node; The dictionary `comefrom` maps from node
     to parent node and the edge (i.e. action)."""
     plan = deque([])
     node = end_node
     while node in comefrom:
         parent_node, action = comefrom[node]
-        plan.appendleft(action)
+        if return_pose:
+            plan.appendleft({"action": action, "next_pose": _simplify_pose(node)})
+        else:
+            plan.appendleft(action)
         node = parent_node
     return list(plan)
 
@@ -204,6 +213,8 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
             return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
+            # if current_pose[0] == (0.25, 0.0, 0.25) and action[0] == "RotateRight":
+            #     import pdb; pdb.set_trace()
             next_pose = transform_pose(current_pose, action)
             new_cost = cost[current_pose] + _cost(action)
             if new_cost < cost.get(next_pose, float("inf")):
