@@ -7,7 +7,7 @@ from .object import (thor_object_with_id,
                      get_object_mask_pixels,
                      thor_closest_object_of_type,
                      thor_closest_object_with_properties)
-from .agent import (reachable_thor_loc2d, thor_reachable_positions,
+from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
                     thor_apply_pose)

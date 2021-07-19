@@ -4,8 +4,7 @@
 #  rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
 #     Not doing quaternion because in ai2thor the mobile robot
 #     can only do two of the rotation axes so there's no problem using
-#     Euclidean.  Will use RADIANS. Will restrict the angles to be between 0 to 2*pi
-#     Units in degrees (to be consistent with ai2thor).
+#     Euclidean.  Will use DEGREES. Will restrict the angles to be between 0 to 360
 #
 #     yaw refers to rotation of the agent's body.
 #     pitch refers to rotation of the camera up and down.
@@ -18,7 +17,7 @@
 
 import math
 from collections import deque
-from .utils import PriorityQueue, euclidean_dist, to_radians, to_degrees
+from .utils import PriorityQueue, euclidean_dist, to_radians
 from .constants import MOVEMENTS, MOVEMENT_PARAMS
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
@@ -35,14 +34,14 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
         forward = params["moveMagnitude"]
     if "degrees" in params and movement.startswith("Rotate"):
         if movement == "RotateLeft":
-            h_angle = to_radians(params["degrees"])
+            h_angle = params["degrees"]
         else:
-            h_angle = -to_radians(params["degrees"])
+            h_angle = -params["degrees"]
     if "degrees" in params and movement.startswith("Look"):
         if movement == "LookUp":
-            v_angle = to_radians(params["degrees"])
+            v_angle = params["degrees"]
         else:
-            v_angle = -to_radians(params["degrees"])
+            v_angle = -params["degrees"]
     return (movement, (forward, h_angle, v_angle))
 
 def get_navigation_actions(movement_params=MOVEMENT_PARAMS, exclude=set()):
@@ -66,8 +65,8 @@ def _simplify_pose(robot_pose):
 def _valid_pose(pose, reachable_positions):
     pose = _simplify_pose(pose)
     return pose[:2] in reachable_positions\
-        and 0 <= pose[1] < 2*math.pi\
-        and 0 <= pose[2] < 2*math.pi\
+        and 0 <= pose[1] < 360.0\
+        and 0 <= pose[2] < 360.0
 
 def _move_by(robot_pose, action_delta):
     """
@@ -80,11 +79,11 @@ def _move_by(robot_pose, action_delta):
     """
     rx, rz, pitch, yaw = robot_pose
     forward, h_angle, v_angle = action_delta
-    new_yaw = yaw + h_angle  # angle (radian)
-    new_rx = rx + forward*math.sin(new_yaw)
-    new_rz = rz + forward*math.cos(new_yaw)
-    new_yaw = new_yaw % (2*math.pi)
-    new_pitch = (pitch + v_angle) % (2*math.pi)
+    new_yaw = yaw + h_angle  # angle (degrees)
+    new_rx = rx + forward*math.sin(to_radians(new_yaw))
+    new_rz = rz + forward*math.cos(to_radians(new_yaw))
+    new_yaw = new_yaw % 360.0
+    new_pitch = (pitch + v_angle) % 360.0
     return (new_rx, new_rz, new_yaw, new_pitch)
 
 def transform_pose(robot_pose, action, schema="vw"):
@@ -174,7 +173,9 @@ def _round_pose(full_pose):
     return ((round(x, 4), round(y, 4), round(z, 4)),\
             (round(pitch, 4), round(yaw, 4), round(roll, 4)))
 
-def find_navigation_plan(start, goal, navigation_actions, reachable_positions, debug=False):
+def find_navigation_plan(start, goal, navigation_actions,
+                         reachable_positions,
+                         goal_distance=0.0, debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
     Recap of A*: A* selects the path that minimizes
@@ -193,6 +194,7 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions, d
         navigation_actions (list): list of navigation actions,
             represented as ("ActionName", dpos, drot), where
             dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
+        goal_distance (bool): acceptable minimum euclidean distance to the goal
         debug (bool): If true, returns the expanded poses
     Returns:
         a list consisting of elements in `navigation_actions`
@@ -221,7 +223,7 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions, d
             _expanded_poses.append(current_pose)
         if _round_pose(current_pose) in visited:
             continue
-        if _same_pose(current_pose, goal):
+        if _same_pose(current_pose, goal, tolerance=goal_distance):
             if debug:
                 plan = _reconstruct_plan(comefrom,
                                          current_pose,

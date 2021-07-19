@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from . import constants
 from .grid_map import GridMap
 from .controller import launch_controller
-from .agent import reachable_thor_loc2d
+from .agent import thor_reachable_positions
 from .utils import remap, euclidean_dist
 
 
@@ -51,7 +51,7 @@ def ithor_scene_names(scene_type="kitchen", levels=None):
 
 def convert_scene_to_grid_map(controller, scene_info, grid_size):
     """Converts an Ai2Thor scene to a GridMap"""
-    x, z = reachable_thor_loc2d(controller)
+    x, z = thor_reachable_positions(controller, by_axes=True)
 
     # obtain grid indices for coordinates  (origin NOT at (0,0))
     thor_gx = np.round(x / grid_size).astype(int)

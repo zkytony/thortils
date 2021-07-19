@@ -2,7 +2,7 @@ import numpy as np
 from .controller import thor_get, _resolve
 
 
-def reachable_thor_loc2d(controller):
+def _reachable_thor_loc2d(controller):
     """
     Returns a tuple (x, z) where x and z are lists corresponding to x/z coordinates.
     You can obtain a set of 2d positions tuples by:
@@ -16,8 +16,20 @@ def reachable_thor_loc2d(controller):
     z = np.array([p['z'] for p in positions])
     return x, z
 
-def thor_reachable_positions(controller):
-    return reachable_thor_loc2d(controller)
+def thor_reachable_positions(controller, by_axes=False):
+    """
+    If `by_axes` is True, then returns x, z
+    where x and z are both numpy arrays corresponding
+    to the coordinates of the reachable positions.
+
+    Otherwise, returns [(x,z) ... ] where x and z are
+    floats for individual reachable position coordinates.
+    """
+    x, z = _reachable_thor_loc2d(controller)
+    if by_axes:
+        return x, z
+    else:
+        return [(x[i], z[i]) for i in range(len(x))]
 
 def thor_agent_pose(event_or_controller, as_tuple=False):
     """Returns a tuple (pos, rot),
