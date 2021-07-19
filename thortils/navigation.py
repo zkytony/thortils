@@ -177,8 +177,7 @@ def _round_pose(full_pose):
 
 
 
-def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
-                         debug=False):
+def find_navigation_plan(start, goal, navigation_actions, reachable_positions, debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
     Recap of A*: A* selects the path that minimizes
@@ -197,8 +196,7 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
         navigation_actions (list): list of navigation actions,
             represented as ("ActionName", dpos, drot), where
             dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
-        debug (bool): If true, yields the poses as they are expanded.
-                      Does not return plan.
+        debug (bool): If true, returns the expanded poses
     Returns:
         a list consisting of elements in `navigation_actions`
     """
@@ -217,17 +215,24 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
     # keep track of visited poses
     visited = set()
 
+    if debug:
+        _expanded_poses = []
+
     while not worklist.isEmpty():
         current_pose = worklist.pop()
         if debug:
-            yield current_pose, worklist
+            _expanded_poses.append(current_pose)
         if _round_pose(current_pose) in visited:
             continue
         if _same_pose(current_pose, goal):
             if debug:
-                yield _reconstruct_plan(comefrom, current_pose)
+                plan = _reconstruct_plan(comefrom,
+                                         current_pose,
+                                         return_pose=True)
+                return plan, _expanded_poses
             else:
                 return _reconstruct_plan(comefrom, current_pose)
+
 
         for action in navigation_actions:
             next_pose = transform_pose(current_pose, action)

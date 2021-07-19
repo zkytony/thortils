@@ -26,22 +26,22 @@ def read_map(floormap, grid_size=0.25):
 def plot_map(ax, reachable_positions, start, goal):
     x = [p[0] for p in reachable_positions]
     z = [p[1] for p in reachable_positions]
-    ax.scatter(x, z, s=200, c='gray')
+    ax.scatter(x, z, s=300, c='gray', zorder=1)
 
     xs, _, zs = start[0]
-    ax.scatter([xs], [zs], s=150, c='red')
+    ax.scatter([xs], [zs], s=200, c='red', zorder=4)
 
     xg, _, zg = goal[0]
-    ax.scatter([xg], [zg], s=150, c='green')
+    ax.scatter([xg], [zg], s=200, c='green', zorder=4)
     ax.invert_yaxis()
 
 def test():
     floormap1 =\
     """
-    G.....
+    S.....
     xxx...
     .x....
-    .....S
+    .....G
     """
 
     floormap2 =\
@@ -50,41 +50,27 @@ def test():
     .x.
     .xG
     """
-    reachable_positions, start, goal, dim = read_map(floormap2, GRID_SIZE)
+    reachable_positions, start, goal, dim = read_map(floormap1, GRID_SIZE)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS, exclude={"LookUp", "LookDown"})
 
-    plt.ion()
     fig, ax = plt.subplots()
     ax.set_xlim(-GRID_SIZE, dim[0] * GRID_SIZE)
     ax.set_ylim(-GRID_SIZE, dim[1] * GRID_SIZE)
     plot_map(ax, reachable_positions, start, goal)
+    plan, expanded_poses = find_navigation_plan(start, goal,
+                                                navigation_actions,
+                                                reachable_positions,
+                                                debug=True)
+    x = [p[0][0] for p in expanded_poses]
+    z = [p[0][2] for p in expanded_poses]
+    c = [i for i in range(0, len(expanded_poses))]
+    ax.scatter(x, z, s=120, c=c, zorder=2, cmap="bone")
+
+    for step in plan:
+        x, z, _, _ = step["next_pose"]
+        ax.scatter([x], [z], s=120, zorder=2, c="orange")
+
     plt.show()
-    poses_plotted = set()
-
-    # plan = find_navigation_plan(start, goal, navigation_actions, reachable_positions)
-    # print(plan)
-
-    for ret in find_navigation_plan(start, goal, navigation_actions,
-                                             reachable_positions, debug=True):
-        if type(ret) == list:
-            plan = ret
-            print(start)
-            pprint(plan)
-            print(goal)
-            break
-
-        pose, worklist = ret
-        # worklist_positions = set((p[0][0], p[0][2]) for p in worklist)
-        # pprint(worklist_positions)
-        # print("----")
-
-        x, _, z = pose[0]
-        if (x, z) not in poses_plotted:
-            ax.scatter([x], [z], s=120, c='blue')
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            poses_plotted.add((x,z))
-
 
 
 if __name__ == "__main__":
