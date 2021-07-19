@@ -8,7 +8,9 @@ import random
 from thortils.navigation import (find_navigation_plan,
                                  get_navigation_actions)
 from thortils.constants import MOVEMENT_PARAMS, GRID_SIZE
-from thortils import thor_reachable_positions, launch_controller
+from thortils import (thor_reachable_positions,
+                      launch_controller,
+                      thor_closest_object_of_type)
 
 
 def read_map(floormap, grid_size=0.25):
@@ -86,7 +88,11 @@ def test_thor_scene():
     reachable_positions = thor_reachable_positions(controller)
     sx, sz = random.sample(reachable_positions, 1)[0]
     start = (sx, 0, sz), (0, 270, 0)
-    gx, gz = random.sample(reachable_positions, 1)[0]
+    target = thor_closest_object_of_type(controller, "PepperShaker")
+    target_position = (target["position"]["x"],
+                       target["position"]["z"])
+    # gx, gz = random.sample(reachable_positions, 1)[0]
+    gx, gz = target_position
     goal = (gx, 0, gz), (0, 135, 0)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
 
@@ -102,6 +108,7 @@ def test_thor_scene():
     plan, expanded_poses = find_navigation_plan(start, goal,
                                                 navigation_actions,
                                                 reachable_positions,
+                                                goal_distance=1.0,
                                                 debug=True)
     x = [p[0][0] for p in expanded_poses]
     z = [p[0][2] for p in expanded_poses]

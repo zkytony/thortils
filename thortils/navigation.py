@@ -139,7 +139,7 @@ def _nav_heuristic(pose, goal):
     pose tuple(position, rotation); goal tuple(position, rotation)"""
     return euclidean_dist(pose[0], goal[0])
 
-def _reconstruct_plan(comefrom, end_node, return_pose=True):
+def _reconstruct_plan(comefrom, end_node, return_pose=False):
     """Returns the plan from start to end_node; The dictionary `comefrom` maps from node
     to parent node and the edge (i.e. action)."""
     plan = deque([])
