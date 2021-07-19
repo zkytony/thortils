@@ -45,9 +45,10 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
             v_angle = -to_radians(params["degrees"])
     return (movement, (forward, h_angle, v_angle))
 
-def get_navigation_actions(movement_params=MOVEMENT_PARAMS):
+def get_navigation_actions(movement_params=MOVEMENT_PARAMS, exclude=set()):
     return [convert_movement_to_action(movement, movement_params)
-            for movement in movement_params]
+            for movement in movement_params
+            if movement not in exclude]
 
 
 def _is_full_pose(robot_pose):
@@ -61,6 +62,10 @@ def _simplify_pose(robot_pose):
         pitch, yaw, roll = robot_pose[1]
         return (x, z, pitch, yaw)
     return robot_pose
+
+def _valid_pose(pose, reachable_positions):
+    pose = _simplify_pose(pose)
+    return pose[:2] in reachable_positions
 
 # Navigation models
 def _move_by(robot_pose, action_delta):
@@ -170,7 +175,8 @@ def _round_pose(full_pose):
 
 
 
-def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
+def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
+                         debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
     Recap of A*: A* selects the path that minimizes
@@ -189,9 +195,13 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
         navigation_actions (list): list of navigation actions,
             represented as ("ActionName", dpos, drot), where
             dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
+        debug (bool): If true, yields the poses as they are expanded.
+                      Does not return plan.
     Returns:
         a list consisting of elements in `navigation_actions`
     """
+    if type(reachable_positions) != set:
+        reachable_positions = set(reachable_positions)
     worklist = PriorityQueue()
     worklist.push(start, _nav_heuristic(start, goal))
 
@@ -207,6 +217,8 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
 
     while not worklist.isEmpty():
         current_pose = worklist.pop()
+        if debug:
+            yield current_pose
         if _round_pose(current_pose) in visited:
             continue
         if _same_pose(current_pose, goal):
@@ -216,6 +228,9 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
             # if current_pose[0] == (0.25, 0.0, 0.25) and action[0] == "RotateRight":
             #     import pdb; pdb.set_trace()
             next_pose = transform_pose(current_pose, action)
+            if not _valid_pose(next_pose, reachable_positions):
+                continue
+
             new_cost = cost[current_pose] + _cost(action)
             if new_cost < cost.get(next_pose, float("inf")):
                 cost[next_pose] = new_cost
