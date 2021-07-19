@@ -230,8 +230,6 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
                 return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
-            if current_pose == start and action[0] == "RotateLeft":
-                import pdb; pdb.set_trace()
             next_pose = transform_pose(current_pose, action)
             if not _valid_pose(_round_pose(next_pose), reachable_positions):
                 continue
