@@ -21,10 +21,10 @@ def read_map(floormap, grid_size=0.25):
 def test():
     floormap1 =\
     """
-    S.....
+    G.....
     .xxxx.
     .x....
-    .....G
+    .....S
     """
 
     floormap2 =\
@@ -32,7 +32,7 @@ def test():
     S.
     .G
     """
-    reachable_positions, start, goal = read_map(floormap2, GRID_SIZE)
+    reachable_positions, start, goal = read_map(floormap1, GRID_SIZE)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
     plan = find_navigation_plan(start, goal, navigation_actions,
                                 reachable_positions)
