@@ -69,7 +69,6 @@ def _valid_pose(pose, reachable_positions):
         and 0 <= pose[1] < 2*math.pi\
         and 0 <= pose[2] < 2*math.pi\
 
-# Navigation models
 def _move_by(robot_pose, action_delta):
     """
     Given 2D robot pose (x, z, pitch, yaw), and an action,
@@ -175,8 +174,6 @@ def _round_pose(full_pose):
     return ((round(x, 4), round(y, 4), round(z, 4)),\
             (round(pitch, 4), round(yaw, 4), round(roll, 4)))
 
-
-
 def find_navigation_plan(start, goal, navigation_actions, reachable_positions, debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
@@ -232,7 +229,6 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions, d
                 return plan, _expanded_poses
             else:
                 return _reconstruct_plan(comefrom, current_pose)
-
 
         for action in navigation_actions:
             next_pose = transform_pose(current_pose, action)

@@ -4,6 +4,7 @@ from thortils.navigation import (find_navigation_plan,
 from thortils.constants import MOVEMENT_PARAMS, GRID_SIZE
 from pprint import pprint
 import matplotlib.pyplot as plt
+import time
 
 def read_map(floormap, grid_size=0.25):
     reachable_positions = []
@@ -38,10 +39,10 @@ def plot_map(ax, reachable_positions, start, goal):
 def test():
     floormap1 =\
     """
-    S.....
-    xxx...
-    .x....
-    .....G
+    S.........
+    xxx.......
+    .x......xx
+    .........G
     """
 
     floormap2 =\
@@ -51,16 +52,18 @@ def test():
     .xG
     """
     reachable_positions, start, goal, dim = read_map(floormap1, GRID_SIZE)
-    navigation_actions = get_navigation_actions(MOVEMENT_PARAMS, exclude={"LookUp", "LookDown"})
+    navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
 
     fig, ax = plt.subplots()
     ax.set_xlim(-GRID_SIZE, dim[0] * GRID_SIZE)
     ax.set_ylim(-GRID_SIZE, dim[1] * GRID_SIZE)
     plot_map(ax, reachable_positions, start, goal)
+    _start_time = time.time()
     plan, expanded_poses = find_navigation_plan(start, goal,
                                                 navigation_actions,
                                                 reachable_positions,
                                                 debug=True)
+    print("Plan found in {:.3f}s".format(time.time() - _start_time))
     x = [p[0][0] for p in expanded_poses]
     z = [p[0][2] for p in expanded_poses]
     c = [i for i in range(0, len(expanded_poses))]
