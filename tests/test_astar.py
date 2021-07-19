@@ -46,12 +46,12 @@ def test():
 
     floormap2 =\
     """
-    S...
-    ....
-    ...G
+    S..
+    .x.
+    .xG
     """
-    reachable_positions, start, goal, dim = read_map(floormap1, GRID_SIZE)
-    navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
+    reachable_positions, start, goal, dim = read_map(floormap2, GRID_SIZE)
+    navigation_actions = get_navigation_actions(MOVEMENT_PARAMS, exclude={"LookUp", "LookDown"})
 
     plt.ion()
     fig, ax = plt.subplots()
@@ -61,15 +61,23 @@ def test():
     plt.show()
     poses_plotted = set()
 
-    for pose_or_plan in find_navigation_plan(start, goal, navigation_actions,
+    # plan = find_navigation_plan(start, goal, navigation_actions, reachable_positions)
+    # print(plan)
+
+    for ret in find_navigation_plan(start, goal, navigation_actions,
                                              reachable_positions, debug=True):
-        if type(pose_or_plan) == tuple:
-            pose = pose_or_plan
-        else:
-            plan = pose_or_plan
+        if type(ret) == list:
+            plan = ret
+            print(start)
+            pprint(plan)
+            print(goal)
             break
 
-        print(pose)
+        pose, worklist = ret
+        # worklist_positions = set((p[0][0], p[0][2]) for p in worklist)
+        # pprint(worklist_positions)
+        # print("----")
+
         x, _, z = pose[0]
         if (x, z) not in poses_plotted:
             ax.scatter([x], [z], s=120, c='blue')
@@ -77,9 +85,6 @@ def test():
             fig.canvas.flush_events()
             poses_plotted.add((x,z))
 
-    print(start)
-    pprint(plan)
-    print(goal)
 
 
 if __name__ == "__main__":

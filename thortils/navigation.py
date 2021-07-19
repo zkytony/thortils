@@ -220,7 +220,7 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
     while not worklist.isEmpty():
         current_pose = worklist.pop()
         if debug:
-            yield current_pose
+            yield current_pose, worklist
         if _round_pose(current_pose) in visited:
             continue
         if _same_pose(current_pose, goal):
@@ -230,8 +230,10 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
                 return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
+            if current_pose == start and action[0] == "RotateLeft":
+                import pdb; pdb.set_trace()
             next_pose = transform_pose(current_pose, action)
-            if not _valid_pose(next_pose, reachable_positions):
+            if not _valid_pose(_round_pose(next_pose), reachable_positions):
                 continue
 
             new_cost = cost[current_pose] + _cost(action)
@@ -241,5 +243,4 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
                 comefrom[next_pose] = (current_pose, action)
 
         visited.add(current_pose)
-
     return None  # no path found

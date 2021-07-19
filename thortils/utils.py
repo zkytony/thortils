@@ -69,3 +69,10 @@ class PriorityQueue:
 
     def isEmpty(self):
         return len(self.heap) == 0
+
+    def __iter__(self):
+        return iter(self.items)
+
+    @property
+    def items(self):
+        return [entry[2] for entry in self.heap]
