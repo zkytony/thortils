@@ -1,3 +1,10 @@
+# Utility functions regarding objects
+#
+# Note: For all functions that return pose,
+# the returned pose is by default a dictionary
+# e.g. with (x=, y=, z=) keys. The `as_typle`
+# option should be False by default.
+
 import math
 from typing import Tuple, Dict, List, Set, Union, Any, Optional, Mapping, cast
 
@@ -5,6 +12,10 @@ from . import constants
 from .controller import thor_get, _resolve
 from .agent import thor_agent_pose, thor_agent_position
 from .utils import euclidean_dist
+
+def thor_object_type(object_id):
+    """By convention, thor object id are <object_type>|.|.|."""
+    return object_id.split("|")[0]
 
 def thor_object_with_id(event_or_controller, object_id):
     event = _resolve(event_or_controller)
@@ -16,7 +27,7 @@ def thor_object_with_id(event_or_controller, object_id):
         print("Object {} does not exist.".format(object_id))
         raise ex
 
-def thor_object_pose(event_or_controller, object_id, as_tuple=True):
+def thor_object_pose(event_or_controller, object_id, as_tuple=False):
     """For objects, pose == position"""
     obj = thor_object_with_id(event_or_controller, object_id)
     p = obj["position"]
@@ -25,7 +36,7 @@ def thor_object_pose(event_or_controller, object_id, as_tuple=True):
     else:
         return p
 
-def thor_object_position(event_or_controller, object_id, as_tuple=True):
+def thor_object_position(event_or_controller, object_id, as_tuple=False):
     return thor_object_pose(event_or_controller, object_id, as_tuple=as_tuple)
 
 def thor_object_poses(event_or_controller, object_type):
@@ -130,9 +141,9 @@ def get_object_interactions(event_or_controller,
     return objects, interactions
 
 
-def get_object_mask_pixels(event_or_controller, objects=None, center_only=False):
+def get_object_bboxes2D(event_or_controller, objects=None, center_only=False):
     """
-    Returns a mapping from object id to either a list of pixel locations or
+    Returns a mapping from object id to either a list bounding boxes or
     the location of the center (if `center_only` is True).
     """
     event = _resolve(event_or_controller)
@@ -211,3 +222,22 @@ def position_dist(
             + (0 if ignore_y else (p0["y"] - p1["y"]) ** 2)
             + (p0["z"] - p1["z"]) ** 2
         )
+
+
+def thor_object_in_fov(event_or_controller, object_id):
+    """Returns True if object with given id is within
+    the current field of view"""
+    visible_objects = thor_visible_objects(event_or_controller)
+    for obj in visible_objects:
+        if obj["objectId"] == object_id:
+            return True
+    return False
+
+def thor_object_of_type_in_fov(event_or_controller, object_type):
+    """Returns True if object with given type is within
+    the current field of view"""
+    visible_objects = thor_visible_objects(event_or_controller)
+    for obj in visible_objects:
+        if obj["objectType"] == object_type:
+            return True
+    return False

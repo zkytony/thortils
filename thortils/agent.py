@@ -80,3 +80,9 @@ def thor_camera_pose(event_or_controller, get_tuples=False):
             (cameraHorizon, rotation["y"], 0)
     else:
         return position, dict(x=cameraHorizon, y=rotation["y"], z=0)
+
+
+def thor_camera_horizon(event_or_controller):
+    event = _resolve(event_or_controller)
+    cameraHorizon = thor_get(event, "agent", "cameraHorizon")
+    return cameraHorizon

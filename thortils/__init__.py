@@ -2,15 +2,21 @@ from . import constants
 from .controller import _resolve, thor_get, launch_controller
 from .object import (thor_object_with_id,
                      thor_object_pose,
-                     thor_object_poses, thor_visible_objects,
-                     thor_interactable_objects, get_object_interactions,
-                     get_object_mask_pixels,
+                     thor_object_poses,
+                     thor_object_position,
+                     thor_visible_objects,
+                     thor_interactable_objects,
+                     get_object_interactions,
+                     get_object_bboxes2D,
                      thor_closest_object_of_type,
-                     thor_closest_object_with_properties)
+                     thor_closest_object_with_properties,
+                     thor_object_in_fov,
+                     thor_object_of_type_in_fov)
 from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
-                    thor_apply_pose)
+                    thor_apply_pose,
+                    thor_camera_horizon)
 from .interactions import (OpenObject,
                            CloseObject,
                            PickupObject,
