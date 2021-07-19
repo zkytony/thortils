@@ -10,7 +10,8 @@ from thortils.navigation import (find_navigation_plan,
 from thortils.constants import MOVEMENT_PARAMS, GRID_SIZE
 from thortils import (thor_reachable_positions,
                       launch_controller,
-                      thor_closest_object_of_type)
+                      thor_closest_object_of_type,
+                      thor_agent_pose)
 
 
 def read_map(floormap, grid_size=0.25):
@@ -41,7 +42,7 @@ def plot_map(ax, reachable_positions, start, goal):
 
     xg, _, zg = goal[0]
     ax.scatter([xg], [zg], s=200, c='green', zorder=4)
-    ax.invert_yaxis()
+
 
 def test_simple():
     floormap1 =\
@@ -86,8 +87,7 @@ def test_simple():
 def test_thor_scene():
     controller = launch_controller({"scene": "FloorPlan1"})
     reachable_positions = thor_reachable_positions(controller)
-    sx, sz = random.sample(reachable_positions, 1)[0]
-    start = (sx, 0, sz), (0, 270, 0)
+    start = thor_agent_pose(controller, as_tuple=True)
     target = thor_closest_object_of_type(controller, "PepperShaker")
     target_position = (target["position"]["x"],
                        target["position"]["z"])
@@ -120,6 +120,7 @@ def test_thor_scene():
         for step in plan:
             x, z, _, _ = step["next_pose"]
             ax.scatter([x], [z], s=120, zorder=2, c="orange")
+            print(step["action"])
 
     plt.show(block=True)
 

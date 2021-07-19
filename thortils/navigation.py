@@ -34,9 +34,9 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
         forward = params["moveMagnitude"]
     if "degrees" in params and movement.startswith("Rotate"):
         if movement == "RotateLeft":
-            h_angle = params["degrees"]
-        else:
             h_angle = -params["degrees"]
+        else:
+            h_angle = params["degrees"]
     if "degrees" in params and movement.startswith("Look"):
         if movement == "LookUp":
             v_angle = params["degrees"]
