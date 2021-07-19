@@ -65,7 +65,9 @@ def _simplify_pose(robot_pose):
 
 def _valid_pose(pose, reachable_positions):
     pose = _simplify_pose(pose)
-    return pose[:2] in reachable_positions
+    return pose[:2] in reachable_positions\
+        and 0 <= pose[1] < 2*math.pi\
+        and 0 <= pose[2] < 2*math.pi\
 
 # Navigation models
 def _move_by(robot_pose, action_delta):
@@ -222,11 +224,12 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions,
         if _round_pose(current_pose) in visited:
             continue
         if _same_pose(current_pose, goal):
-            return _reconstruct_plan(comefrom, current_pose)
+            if debug:
+                yield _reconstruct_plan(comefrom, current_pose)
+            else:
+                return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
-            # if current_pose[0] == (0.25, 0.0, 0.25) and action[0] == "RotateRight":
-            #     import pdb; pdb.set_trace()
             next_pose = transform_pose(current_pose, action)
             if not _valid_pose(next_pose, reachable_positions):
                 continue

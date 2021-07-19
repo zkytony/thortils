@@ -39,15 +39,16 @@ def test():
     floormap1 =\
     """
     G.....
-    ......
+    xxx...
     .x....
     .....S
     """
 
     floormap2 =\
     """
-    S.
-    .G
+    S...
+    ....
+    ...G
     """
     reachable_positions, start, goal, dim = read_map(floormap1, GRID_SIZE)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
@@ -58,21 +59,27 @@ def test():
     ax.set_ylim(-GRID_SIZE, dim[1] * GRID_SIZE)
     plot_map(ax, reachable_positions, start, goal)
     plt.show()
+    poses_plotted = set()
 
-    import pdb; pdb.set_trace()
+    for pose_or_plan in find_navigation_plan(start, goal, navigation_actions,
+                                             reachable_positions, debug=True):
+        if type(pose_or_plan) == tuple:
+            pose = pose_or_plan
+        else:
+            plan = pose_or_plan
+            break
 
-    for pose in find_navigation_plan(start, goal, navigation_actions,
-                                     reachable_positions, debug=True):
         print(pose)
         x, _, z = pose[0]
-        ax.scatter([x], [z], s=120, c='blue')
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-    # plan = find_navigation_plan(start, goal, navigation_actions,
-    #                             reachable_positions, debug=True)
-    # print(start)
-    # pprint(plan)
-    # print(goal)
+        if (x, z) not in poses_plotted:
+            ax.scatter([x], [z], s=120, c='blue')
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+            poses_plotted.add((x,z))
+
+    print(start)
+    pprint(plan)
+    print(goal)
 
 
 if __name__ == "__main__":
