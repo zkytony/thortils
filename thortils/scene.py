@@ -3,6 +3,7 @@ import os
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from ai2thor.controller import Controller
 from . import constants
 from .grid_map import GridMap
 from .controller import launch_controller

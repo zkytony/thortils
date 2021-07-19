@@ -65,8 +65,8 @@ def _simplify_pose(robot_pose):
 def _valid_pose(pose, reachable_positions):
     pose = _simplify_pose(pose)
     return pose[:2] in reachable_positions\
-        and 0 <= pose[1] < 360.0\
-        and 0 <= pose[2] < 360.0
+        and 0 <= pose[2] < 360.0\
+        and 0 <= pose[3] < 360.0
 
 def _move_by(robot_pose, action_delta):
     """
@@ -244,4 +244,9 @@ def find_navigation_plan(start, goal, navigation_actions,
                 comefrom[next_pose] = (current_pose, action)
 
         visited.add(current_pose)
-    return None  # no path found
+
+    # no path found
+    if debug:
+        return None, _expanded_poses
+    else:
+        return None
