@@ -18,8 +18,7 @@
 
 import math
 from collections import deque
-from heapq import heapify, heappush, heappop
-from .utils import euclidean_dist, Valuable, to_radians
+from .utils import PriorityQueue, euclidean_dist, to_radians
 from .constants import MOVEMENT_PARAMS
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
@@ -32,8 +31,8 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
                          "We don't know about it.".format(movement))
     params = movement_params[movement]
     forward, h_angle, v_angle = 0.0, 0.0, 0.0
-    if "movementMagnitude" in params:
-        forward = params["movementMagnitude"]
+    if "moveMagnitude" in params:
+        forward = params["moveMagnitude"]
     if "degrees" in params and movement.startswith("Rotate"):
         h_angle = to_radians(params["degrees"])
     if "degrees" in params and movement.startswith("Look"):
@@ -145,7 +144,21 @@ def _cost(action):
     action is (movement_str, (forward, h_angle, v_angle))
     """
     forward, h_angle, v_angle = action[1]
-    return forward
+    cost = 0
+    if forward != 0:
+        cost += 1
+    if h_angle != 0:
+        cost += 1
+    if v_angle != 0:
+        cost += 1
+    return cost
+
+def _round_pose(full_pose):
+    x, y, z = full_pose[0]
+    pitch, yaw, roll = full_pose[1]
+    return ((round(x, 4), round(y, 4), round(z, 4)),\
+            (round(pitch, 4), round(yaw, 4), round(roll, 4)))
+
 
 
 def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
@@ -169,40 +182,35 @@ def find_navigation_plan(start, goal, navigation_actions, reachable_positions):
             dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
     Returns:
         a list consisting of elements in `navigation_actions`
-
     """
-    # fscore[n] = gscore[n] + h(n) represents our current best guess of path
-    # cost from start to finish if it goes through n
-    fscore = {}
-    fscore[start] = _nav_heuristic(start, goal)
+    worklist = PriorityQueue()
+    worklist.push(start, _nav_heuristic(start, goal))
 
-    # gcost[n] is the cost of the cheapest path from start to n currently known
-    gscore = {}
-    gscore[start] = 0
+    # cost[n] is the cost of the cheapest path from start to n currently known
+    cost = {}
+    cost[start] = 0
 
-    # The nodes will be poses, the edges will be navigation actions
-    vstart = Valuable(start, fscore[start])
-    worklist = [vstart]
-    heapify(worklist)
-    worklist_items = set({start})
     # comefrom[n] is the node immediately preceding node n on the cheapeast path
     comefrom = {}
 
-    while len(worklist) > 0:
-        vcurrent = heappop(worklist)
-        current_pose = vcurrent.data
-        worklist_items.remove(current_pose)
+    # keep track of visited poses
+    visited = set()
+
+    while not worklist.isEmpty():
+        current_pose = worklist.pop()
+        if _round_pose(current_pose) in visited:
+            continue
         if _same_pose(current_pose, goal):
             return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
             next_pose = transform_pose(current_pose, action)
-            tentative_gscore = gscore[current_pose] + _cost(action)
-            if tentative_gscore < gscore.get(next_pose, float("inf")):
+            new_cost = cost[current_pose] + _cost(action)
+            if new_cost < cost.get(next_pose, float("inf")):
+                cost[next_pose] = new_cost
+                worklist.push(next_pose, cost[next_pose] + _nav_heuristic(next_pose, goal))
                 comefrom[next_pose] = (current_pose, action)
-                gscore[next_pose] = tentative_gscore
-                fscore[next_pose] = gscore[next_pose] + _nav_heuristic(next_pose, goal)
-                if next_pose not in worklist_items:
-                    heappush(worklist, Valuable(next_pose, fscore[next_pose]))
-                    worklist_items.add(next_pose)
+
+        visited.add(current_pose)
+
     return None  # no path found

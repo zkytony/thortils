@@ -3,6 +3,7 @@ import math
 import datetime
 import pytz
 from pytz import reference as pytz_reference
+import heapq
 
 def remap(oldval, oldmin, oldmax, newmin, newmax, enforce=False):
     newval = (((oldval - oldmin) * (newmax - newmin)) / (oldmax - oldmin)) + newmin
@@ -41,24 +42,30 @@ def nice_timestr(dtobj=None):
     return dtobj.strftime("%a, %d-%b-%Y %I:%M:%S, " + localtime.tzname(dtobj))
 
 
-class Valuable:
-    """A piece of data with value"""
-    def __init__(self, data, value):
-        self.data = data
-        self.value = value
-    def __lt__(self, other):
-        return self.value < other.value
-    def __le__(self, other):
-        return self.value <= other.value
-    def __eq__(self, other):
-        if isinstance(other, Valuable):
-            return self.value == other.value
-        return False
-    def __ne__(self, other):
-        return self.value != other.value
-    def __gt__(self, other):
-        return self.value > other.value
-    def __ge__(self, other):
-        return self.value >= other.value
-    def __hash__(self):
-        return hash(self.data)
+class PriorityQueue:
+    """
+      Implements a priority queue data structure. Each inserted item
+      has a priority associated with it and the client is usually interested
+      in quick retrieval of the lowest-priority item in the queue. This
+      data structure allows O(1) access to the lowest-priority item.
+      Note that this PriorityQueue does not allow you to change the priority
+      of an item.  However, you may insert the same item multiple times with
+      different priorities.
+
+      This implementation is from the pacman_assignment
+    """
+    def  __init__(self):
+        self.heap = []
+        self.count = 0
+
+    def push(self, item, priority):
+        entry = (priority, self.count, item)
+        heapq.heappush(self.heap, entry)
+        self.count += 1
+
+    def pop(self):
+        (_, _, item) = heapq.heappop(self.heap)
+        return item
+
+    def isEmpty(self):
+        return len(self.heap) == 0
