@@ -28,7 +28,7 @@ def thor_get(event, *keys):
 
 def launch_controller(config):
     controller = Controller(
-        scene                      = config.get("scene"),
+        scene                      = config["scene"],
         agentMode                  = config.get("AGENT_MODE"                   ,constants.AGENT_MODE),
         gridSize                   = config.get("GRID_SIZE"                    ,constants.GRID_SIZE),
         visibilityDistance         = config.get("VISIBILITY_DISTANCE"          ,constants.VISIBILITY_DISTANCE),

@@ -70,6 +70,8 @@ def test_simple():
     plan, expanded_poses = find_navigation_plan(start, goal,
                                                 navigation_actions,
                                                 reachable_positions,
+                                                diagonal_ok=True,
+                                                grid_size=GRID_SIZE,
                                                 debug=True)
     print("Plan found in {:.3f}s".format(time.time() - _start_time))
     x = [p[0][0] for p in expanded_poses]

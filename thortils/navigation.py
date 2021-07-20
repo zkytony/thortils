@@ -23,8 +23,13 @@ See project README; Poses in ai2thor:
 import math
 from collections import deque
 from .utils import (PriorityQueue, euclidean_dist,
-                    to_radians, normalize_angles, roundany)
-from .constants import MOVEMENTS, MOVEMENT_PARAMS
+                    to_radians, normalize_angles, roundany,
+                    closest, to_degrees)
+from .constants import (MOVEMENTS, MOVEMENT_PARAMS,
+                        H_ANGLES, V_ANGLES,
+                        GOAL_DISTANCE)
+from .object import thor_object_pose, thor_closest_object_of_type
+from .agent import thor_reachable_positions
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
     """movement (str), a key in the constants.MOVEMENT_PARAMS dictionary
@@ -195,6 +200,7 @@ def find_navigation_plan(start, goal, navigation_actions,
                          goal_distance=0.0,
                          grid_size=None,
                          diagonal_ok=False,
+                         return_pose=False,
                          debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
@@ -219,6 +225,7 @@ def find_navigation_plan(start, goal, navigation_actions,
             necessary if `diagonal_ok` is True
         diagonal_ok (bool): True if 'MoveAhead' can move
             the robot diagonally.
+        return_pose (bool): True if return a list of {"action": <action>, "next_pose": <pose>} dicts
         debug (bool): If true, returns the expanded poses
     Returns:
         a list consisting of elements in `navigation_actions`
@@ -263,7 +270,8 @@ def find_navigation_plan(start, goal, navigation_actions,
                                          return_pose=True)
                 return plan, _expanded_poses
             else:
-                return _reconstruct_plan(comefrom, current_pose)
+                return _reconstruct_plan(comefrom, current_pose,
+                                         return_pose=return_pose)
 
         for action in navigation_actions:
             next_pose = transform_pose(current_pose, action,
@@ -285,3 +293,116 @@ def find_navigation_plan(start, goal, navigation_actions,
         return None, _expanded_poses
     else:
         return None
+
+def get_shortest_path_to_object(controller, object_id,
+                                start_position, start_rotation,
+                                v_angles=V_ANGLES,
+                                h_angles=H_ANGLES,
+                                movement_params=MOVEMENT_PARAMS,
+                                goal_distance=GOAL_DISTANCE,
+                                diagonal_ok=False,
+                                positions_only=False,
+                                return_plan=False):
+    """
+    Per this issue: https://github.com/allenai/ai2thor/issues/825
+    Ai2thor's own method to compute shortest path is not desirable.
+    I'm therefore writing my own using the algorithm above.
+    It has almost identical call signature as the function of the same name
+    under ai2thor.util.metric.
+
+    Returns:
+       If positions_only is True, returns a list of dict(x=,y=,z=) positions
+       If return_plan is True, returns a tuple of poses (or positions) and actions
+    """
+    reachable_positions = thor_reachable_positions(controller)
+    target_position = thor_object_pose(controller,
+                                       object_id, as_tuple=True)
+    start_pose = (start_position, start_rotation)
+    goal_pose = _goal_pose(reachable_positions,
+                           target_position,
+                           v_angles, h_angles,
+                           y=start_position[1],
+                           roll=start_rotation[2])
+
+    navigation_actions = get_navigation_actions(movement_params)
+    plan = find_navigation_plan(start_pose, goal_pose,
+                                navigation_actions,
+                                reachable_positions,
+                                goal_distance=goal_distance,
+                                grid_size=controller.initialization_parameters["gridSize"],
+                                diagonal_ok=diagonal_ok,
+                                return_pose=True)
+    poses = []
+    actions = []
+    for step in plan:
+        actions.append(step["action"])
+        x, z, pitch, yaw = step["next_pose"]
+        if positions_only:
+            poses.append(dict(x=x, y=start_position[1], z=z))
+        else:
+            poses.append((dict(x=x, y=start_position[1], z=z),
+                          dict(x=pitch, y=yaw, z=start_rotation[2])))
+
+    if return_plan:
+        return poses, actions
+    else:
+        return poses
+
+def get_shortest_path_to_object_type(controller, object_type, *args, **kwargs):
+    """Similar to get_shortest_path_to_object except
+    taking object_type as input."""
+    obj = thor_closest_object_of_type(controller, object_type)
+    return get_shortest_path_to_object(controller, obj["objectId"], *args, **kwargs)
+
+
+def _pitch_facing(robot_position, target_position, angles):
+    """
+    Returns a pitch angle rotation such that
+    if the robot is at `robot_position` and target is at
+    `target_position`, the robot is facing the target.
+
+    Args:
+       robot_position (tuple): x, y, z position
+       target_position (tuple): x, y, z position
+       angles (list): Valid pitch angles
+    """
+    angles = normalize_angles(angles)
+    rx, ry, _ = robot_position
+    tx, ty, _ = target_position
+    pitch = to_degrees(math.atan2(tx - rx, ty - ry)) % 360
+    return closest(angles, pitch)
+
+def _yaw_facing(robot_position, target_position, angles):
+    """
+    Returns a yaw angle rotation such that
+    if the robot is at `robot_position` and target is at
+    `target_position`, the robot is facing the target.
+
+    Args:
+       robot_position (tuple): x, y, z position
+       target_position (tuple): x, y, z position
+       angles (list): Valid yaw angles
+    """
+    angles = normalize_angles(angles)
+    rx, _, rz = robot_position
+    tx, _, tz = target_position
+    yaw = to_degrees(math.atan2(tx - rx, tz - rz)) % 360
+    return closest(angles, yaw)
+
+
+def _goal_pose(reachable_positions,
+               target_position,
+               v_angles, h_angles,
+               y=0.0, roll=0.0):
+    """Compute the goal pose; the rotation should be facing the target"""
+    x, z =\
+        min(reachable_positions,
+            key=lambda p : euclidean_dist(p, target_position))
+    closest_reachable_pos = (x, y, z)
+    goal_pitch = _pitch_facing(closest_reachable_pos,
+                               target_position, v_angles)
+    goal_yaw = _yaw_facing(closest_reachable_pos,
+                           target_position, h_angles)
+    #target_position
+    goal_pose = (target_position, (goal_pitch, goal_yaw, roll))
+    return goal_pose
