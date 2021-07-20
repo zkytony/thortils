@@ -37,6 +37,13 @@ def normalize_angles(angles):
 def euclidean_dist(p1, p2):
     return math.sqrt(sum([(a - b)** 2 for a, b in zip(p1, p2)]))
 
+def roundany(x, base):
+    """
+    rounds the number x (integer or float) to
+    the closest number that increments by `base`.
+    """
+    return base * round(x / base)
+
 
 ########## Python utils
 def nice_timestr(dtobj=None):

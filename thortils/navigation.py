@@ -22,7 +22,8 @@ See project README; Poses in ai2thor:
 
 import math
 from collections import deque
-from .utils import PriorityQueue, euclidean_dist, to_radians, normalize_angles
+from .utils import (PriorityQueue, euclidean_dist,
+                    to_radians, normalize_angles, roundany)
 from .constants import MOVEMENTS, MOVEMENT_PARAMS
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
@@ -73,25 +74,27 @@ def _valid_pose(pose, reachable_positions):
         and 0 <= pose[2] < 360.0\
         and 0 <= pose[3] < 360.0
 
-def _move_by(robot_pose, action_delta):
+def _move_by(robot_pose, action_delta,
+             grid_size=None, diagonal_ok=False):
     """
     Given 2D robot pose (x, z, pitch, yaw), and an action,
     which is (forward, h_angle, v_angle); The angles are in RADIANS
     Ai2Thor uses this model, as seen by MoveAhead, MoveLeft etc. actions.
-
-    h_angle: horizontal angle. Changes yaw
-    v_angle: vertical angle: changes pitch
     """
     rx, rz, pitch, yaw = robot_pose
     forward, h_angle, v_angle = action_delta
     new_yaw = yaw + h_angle  # angle (degrees)
     new_rx = rx + forward*math.sin(to_radians(new_yaw))
     new_rz = rz + forward*math.cos(to_radians(new_yaw))
+    if diagonal_ok:
+        new_rx = roundany(new_rx, grid_size)
+        new_rz = roundany(new_rz, grid_size)
     new_yaw = new_yaw % 360.0
     new_pitch = (pitch + v_angle) % 360.0
     return (new_rx, new_rz, new_yaw, new_pitch)
 
-def transform_pose(robot_pose, action, schema="vw"):
+def transform_pose(robot_pose, action, schema="vw",
+                   diagonal_ok=False, grid_size=None):
     """
     Transform pose of robot in 2D
     robot_pose (tuple): Either 2d pose (x,y,yaw,pitch)
@@ -105,7 +108,8 @@ def transform_pose(robot_pose, action, schema="vw"):
     """
     x, z, pitch, yaw = _simplify_pose(robot_pose)
     action_name, delta = action
-    new_pose = _move_by((x, z, pitch, yaw), delta)
+    new_pose = _move_by((x, z, pitch, yaw), delta,
+                        grid_size=grid_size, diagonal_ok=diagonal_ok)
     if _is_full_pose(robot_pose):
         new_rx, new_rz, new_yaw, new_pitch = new_pose
         return (new_rx, robot_pose[0][1], new_rz),\
@@ -189,6 +193,8 @@ def _round_pose(full_pose):
 def find_navigation_plan(start, goal, navigation_actions,
                          reachable_positions,
                          goal_distance=0.0,
+                         grid_size=None,
+                         diagonal_ok=False,
                          debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
@@ -209,6 +215,10 @@ def find_navigation_plan(start, goal, navigation_actions,
             represented as ("ActionName", dpos, drot), where
             dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
         goal_distance (bool): acceptable minimum euclidean distance to the goal
+        grid_size (float): size of the grid, typically 0.25. Only
+            necessary if `diagonal_ok` is True
+        diagonal_ok (bool): True if 'MoveAhead' can move
+            the robot diagonally.
         debug (bool): If true, returns the expanded poses
     Returns:
         a list consisting of elements in `navigation_actions`
@@ -256,7 +266,9 @@ def find_navigation_plan(start, goal, navigation_actions,
                 return _reconstruct_plan(comefrom, current_pose)
 
         for action in navigation_actions:
-            next_pose = transform_pose(current_pose, action)
+            next_pose = transform_pose(current_pose, action,
+                                       grid_size=grid_size,
+                                       diagonal_ok=diagonal_ok)
             if not _valid_pose(_round_pose(next_pose), reachable_positions):
                 continue
 

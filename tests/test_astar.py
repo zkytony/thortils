@@ -108,6 +108,8 @@ def test_thor_scene():
     plan, expanded_poses = find_navigation_plan(start, goal,
                                                 navigation_actions,
                                                 reachable_positions,
+                                                grid_size=GRID_SIZE,
+                                                diagonal_ok=True,
                                                 goal_distance=1.0,
                                                 debug=True)
     x = [p[0][0] for p in expanded_poses]
