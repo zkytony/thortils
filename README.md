@@ -14,7 +14,7 @@ Code related to Ai2-Thor. Try to do one thing once.
    - Download [scenes.zip](https://drive.google.com/file/d/1WcIfUusWBfrGeDw-tVQqlcdnQiRKQyE4/view?usp=sharing)
      and [scene_scatter_plots.zip](https://drive.google.com/file/d/1d3PRWkqjH6YaBvw39MFWtmUB722-DYIQ/view?usp=sharing)
      and decompress them in the root directory of this repository, or
-     
+
      **Note** These data files were created for ai2thor version 2.7.2. The code still works if you download them, but the scene info won't be correct for version 3.3.4.
 
    - Run the following scripts to generate these two datasets:
@@ -60,3 +60,36 @@ Inside thortils/:
 * interactions.py: Functions that correspond to calling different interaction actions in Thor (e.g. `OpenObject` means calling `controller.step(action="OpenObject")`).
 * constants.py: The configuration, including parameters used as default when launching controllers.
 * utils.py: Non-Thor related utility functions
+
+
+## Documentations
+
+### Poses
+
+In ai2thor, a pose is typically a tuple `(position, rotation)`.
+Although ai2thor likes to use dictionary, we often use tuples in this codebase:
+
+* `position` (tuple): tuple `(x, y, z)`; ai2thor uses (x, z) for robot base
+* `rotation` (tuple): tuple `(x, y, z)`; pitch, yaw, roll.
+
+   Not doing quaternion because in ai2thor the mobile robot
+   can only do two of the rotation axes so there's no problem using
+   Euclidean.  Will use DEGREES. Will restrict the angles to be
+   between 0 to 360 (same as ai2thor).
+
+   **yaw** refers to rotation of the agent's body.
+   **pitch** refers to rotation of the camera up and down.
+
+There are two kinds of pose representations throughout the code in this repo:
+
+* **Full pose**: refers to a tuple `(position, rotation)`, defined below.
+* **simplified pose** refers to (x, z, pitch, yaw)
+
+### Actions
+
+When specifying actions in ai2thor, you supply an action name and a dictionary
+of parameters. For navigation actions, we also use a format as follows:
+```
+(action_name, (forward, h_angle, v_angle))
+```
+We sometimes call variables "action\_delta" or "delta" to refer to `(forward, h_angle, v_angle)`
