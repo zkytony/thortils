@@ -3,8 +3,12 @@
 GRID_SIZE = 0.25
 MOVE_STEP_SIZE = GRID_SIZE
 
-H_ROTATION = 45   # Only 90 won't stuck
-V_ROTATION = 30
+H_ROTATION = 45   # Yaw; body rotation. Only 90 won't stuck
+V_ROTATION = 30   # Pitch; camera up and down
+
+H_ANGLES = [i*H_ROTATION for i in range(int(360/H_ROTATION))]
+# Reference v3.3.4 https://ai2thor.allenai.org/ithor/documentation/navigation/#Teleport-horizon
+V_ANGLES = [-30, 0, 30, 60]
 
 FOV = 90   # from official doc: The default field of view when agentMode="default" is 90 degrees.
 

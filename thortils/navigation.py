@@ -1,23 +1,28 @@
-# Poses in ai2thor:
-#
-#  position (tuple): tuple (x, y, z); ai2thor uses (x, z) for robot base
-#  rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
-#     Not doing quaternion because in ai2thor the mobile robot
-#     can only do two of the rotation axes so there's no problem using
-#     Euclidean.  Will use DEGREES. Will restrict the angles to be between 0 to 360
-#
-#     yaw refers to rotation of the agent's body.
-#     pitch refers to rotation of the camera up and down.
-#
-#  "Full pose" refers to (position, rotation), defined above
-#  "simplified pose" refers to (x, z, pitch, yaw)
-#
-#  "action" refers to navigation action of the form (action_name, (forward, h_angle, v_angle))
-#  "action_delta" or "delta" refers to (forward, h_angle, v_angle)
+"""
+Navigation in ai2thor
+
+See project README; Poses in ai2thor:
+
+ position (tuple): tuple (x, y, z); ai2thor uses (x, z) for robot base
+ rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
+    Not doing quaternion because in ai2thor the mobile robot
+    can only do two of the rotation axes so there's no problem using
+    Euclidean.  Will use DEGREES. Will restrict the angles to be
+    between 0 to 360 (same as ai2thor).
+
+    yaw refers to rotation of the agent's body.
+    pitch refers to rotation of the camera up and down.
+
+ "Full pose" refers to (position, rotation), defined above
+ "simplified pose" refers to (x, z, pitch, yaw)
+
+ "action" refers to navigation action of the form (action_name, (forward, h_angle, v_angle))
+ "action_delta" or "delta" refers to (forward, h_angle, v_angle)
+"""
 
 import math
 from collections import deque
-from .utils import PriorityQueue, euclidean_dist, to_radians
+from .utils import PriorityQueue, euclidean_dist, to_radians, normalize_angles
 from .constants import MOVEMENTS, MOVEMENT_PARAMS
 
 def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
@@ -108,7 +113,7 @@ def transform_pose(robot_pose, action, schema="vw"):
     else:
         return new_pose
 
-def _same_pose(pose1, pose2, tolerance=1e-4):
+def _same_pose(pose1, pose2, tolerance=1e-4, angle_tolerance=5):
     """
     Returns true if pose1 and pose2 are of the same pose;
     Only cares about the coordinates that Ai2Thor cares about,
@@ -116,6 +121,14 @@ def _same_pose(pose1, pose2, tolerance=1e-4):
 
     pose1 and pose2 can either be full pose (i.e. (position, rotation)),
     or the simplified pose: (x, z, pitch, yaw)
+
+    Args:
+       tolerance (float): Euclidean distance tolerance
+       angle_tolerance (float): Angular tolerance;
+          Instead of relying on this tolerance, you
+          should make sure the goal pose's rotation
+          can be achieved exactly by taking the
+          rotation actions.
     """
     if _is_full_pose(pose1):
         x1, _, z1 = pose1[0]
@@ -130,8 +143,8 @@ def _same_pose(pose1, pose2, tolerance=1e-4):
         x2, z2, pitch2, yaw2 = pose1
 
     return euclidean_dist((x1, z1), (x2, z2)) <= tolerance\
-        and abs(pitch1 - pitch2) <= tolerance\
-        and abs(yaw1 - yaw2) <= tolerance
+        and abs(pitch1 - pitch2) <= angle_tolerance\
+        and abs(yaw1 - yaw2) <= angle_tolerance
 
 
 def _nav_heuristic(pose, goal):
@@ -175,7 +188,8 @@ def _round_pose(full_pose):
 
 def find_navigation_plan(start, goal, navigation_actions,
                          reachable_positions,
-                         goal_distance=0.0, debug=False):
+                         goal_distance=0.0,
+                         debug=False):
     """Returns a navigation plan as a list of navigation actions. Uses A*
 
     Recap of A*: A* selects the path that minimizes
@@ -201,6 +215,14 @@ def find_navigation_plan(start, goal, navigation_actions,
     """
     if type(reachable_positions) != set:
         reachable_positions = set(reachable_positions)
+
+    # Map angles in start and goal to be within 0 to 360 (see top comments)
+    start_rotation = normalize_angles(start[1])
+    goal_rotation = normalize_angles(goal[1])
+    start = (start[0], start_rotation)
+    goal = (goal[0], goal_rotation)
+
+    # The priority queue
     worklist = PriorityQueue()
     worklist.push(start, _nav_heuristic(start, goal))
 
@@ -223,7 +245,8 @@ def find_navigation_plan(start, goal, navigation_actions,
             _expanded_poses.append(current_pose)
         if _round_pose(current_pose) in visited:
             continue
-        if _same_pose(current_pose, goal, tolerance=goal_distance):
+        if _same_pose(current_pose, goal,
+                      tolerance=goal_distance):
             if debug:
                 plan = _reconstruct_plan(comefrom,
                                          current_pose,

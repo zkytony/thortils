@@ -25,6 +25,14 @@ def to_degrees(th):
 def to_deg(th):
     return th*180 / np.pi
 
+def closest(values, query):
+    """Returns the entry in `values` that is
+    closest to `query` in terms of absolute value difference."""
+    return min(values, key=lambda v: abs(v-query))
+
+def normalize_angles(angles):
+    """Returns array-like of angles within 0 to 360 degrees"""
+    return type(angles)(map(lambda x: x % 360, angles))
 
 def euclidean_dist(p1, p2):
     return math.sqrt(sum([(a - b)** 2 for a, b in zip(p1, p2)]))

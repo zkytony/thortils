@@ -35,6 +35,7 @@ def thor_agent_pose(event_or_controller, as_tuple=False):
     """Returns a tuple (pos, rot),
     pos: dict (x=, y=, z=)
     rot: dict (x=, y=, z=)
+    The angles are in degrees and between 0 to 360 (ai2thor convention)
     """
     event = _resolve(event_or_controller)
     p = thor_get(event, "agent", "position")
