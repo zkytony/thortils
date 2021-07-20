@@ -296,13 +296,7 @@ def find_navigation_plan(start, goal, navigation_actions,
 
 def get_shortest_path_to_object(controller, object_id,
                                 start_position, start_rotation,
-                                v_angles=V_ANGLES,
-                                h_angles=H_ANGLES,
-                                movement_params=MOVEMENT_PARAMS,
-                                goal_distance=GOAL_DISTANCE,
-                                diagonal_ok=False,
-                                positions_only=False,
-                                return_plan=False):
+                                **kwargs):
     """
     Per this issue: https://github.com/allenai/ai2thor/issues/825
     Ai2thor's own method to compute shortest path is not desirable.
@@ -314,7 +308,23 @@ def get_shortest_path_to_object(controller, object_id,
        If positions_only is True, returns a list of dict(x=,y=,z=) positions
        If return_plan is True, returns a tuple of poses (or positions) and actions
     """
-    reachable_positions = thor_reachable_positions(controller)
+    # Parameters
+    v_angles = kwargs.get("v_angles", V_ANGLES)
+    h_angles = kwargs.get("h_angles", H_ANGLES)
+    movement_params = kwargs.get("movement_params", MOVEMENT_PARAMS)
+    goal_distance = kwargs.get("goal_distance", GOAL_DISTANCE)
+    diagonal_ok = kwargs.get("diagonal_ok", False)
+    positions_only = kwargs.get("positions_only", False)
+    return_plan = kwargs.get("return_plan", False)
+    as_tuples = kwargs.get("as_tuples", False)
+
+    # reachable positions; must round them to grids otherwise ai2thor has a bug.
+    grid_size = controller.initialization_parameters["gridSize"]
+    reachable_positions = [
+        tuple(map(lambda x: roundany(x, grid_size), pos))
+        for pos in thor_reachable_positions(controller)]
+
+    # computer goal pose
     target_position = thor_object_pose(controller,
                                        object_id, as_tuple=True)
     start_pose = (start_position, start_rotation)
@@ -329,7 +339,7 @@ def get_shortest_path_to_object(controller, object_id,
                                 navigation_actions,
                                 reachable_positions,
                                 goal_distance=goal_distance,
-                                grid_size=controller.initialization_parameters["gridSize"],
+                                grid_size=grid_size,
                                 diagonal_ok=diagonal_ok,
                                 return_pose=True)
     poses = []
@@ -338,10 +348,18 @@ def get_shortest_path_to_object(controller, object_id,
         actions.append(step["action"])
         x, z, pitch, yaw = step["next_pose"]
         if positions_only:
-            poses.append(dict(x=x, y=start_position[1], z=z))
+            y = start_position[1]
+            if as_tuples:
+                poses.append((x,y,z))
+            else:
+                poses.append(dict(x=x, y=y, z=z))
         else:
-            poses.append((dict(x=x, y=start_position[1], z=z),
-                          dict(x=pitch, y=yaw, z=start_rotation[2])))
+            roll = start_rotation[2]
+            if as_tuples:
+                poses.append(((x,y,z), (pitch, yaw, roll)))
+            else:
+                poses.append((dict(x=x, y=start_position[1], z=z),
+                              dict(x=pitch, y=yaw, z=roll)))
 
     if return_plan:
         return poses, actions
