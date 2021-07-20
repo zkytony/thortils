@@ -50,9 +50,9 @@ def convert_movement_to_action(movement, movement_params=MOVEMENT_PARAMS):
             h_angle = params["degrees"]
     if "degrees" in params and movement.startswith("Look"):
         if movement == "LookUp":
-            v_angle = params["degrees"]
-        else:
             v_angle = -params["degrees"]
+        else:
+            v_angle = params["degrees"]
     return (movement, (forward, h_angle, v_angle))
 
 def get_navigation_actions(movement_params=MOVEMENT_PARAMS, exclude=set()):
@@ -384,11 +384,11 @@ def _pitch_facing(robot_position, target_position, angles):
        target_position (tuple): x, y, z position
        angles (list): Valid pitch angles
     """
-    angles = normalize_angles(angles)
+    # angles = normalize_angles(angles)
     rx, ry, _ = robot_position
     tx, ty, _ = target_position
-    pitch = to_degrees(math.atan2(tx - rx, ty - ry)) % 360
-    return closest(angles, pitch)
+    pitch = to_degrees(math.atan2(ty - ry, tx - rx))
+    return closest(angles, pitch) % 360
 
 def _yaw_facing(robot_position, target_position, angles):
     """

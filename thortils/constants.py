@@ -7,7 +7,10 @@ H_ROTATION = 45   # Yaw; body rotation. Only 90 won't stuck
 V_ROTATION = 30   # Pitch; camera up and down
 
 H_ANGLES = [i*H_ROTATION for i in range(int(360/H_ROTATION))]
-# Reference v3.3.4 https://ai2thor.allenai.org/ithor/documentation/navigation/#Teleport-horizon
+# Reference v3.3.4
+# https://ai2thor.allenai.org/ithor/documentation/navigation/#Teleport-horizon
+# Negative camera horizon values correspond to the agent looking up, whereas
+# positive horizon values correspond to the agent looking down.
 V_ANGLES = [-30, 0, 30, 60]
 
 FOV = 90   # from official doc: The default field of view when agentMode="default" is 90 degrees.
