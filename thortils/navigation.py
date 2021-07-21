@@ -384,10 +384,9 @@ def _pitch_facing(robot_position, target_position, angles):
        target_position (tuple): x, y, z position
        angles (list): Valid pitch angles
     """
-    # angles = normalize_angles(angles)
     rx, ry, _ = robot_position
     tx, ty, _ = target_position
-    pitch = to_degrees(math.atan2(ty - ry, tx - rx))
+    pitch = to_degrees(math.atan2(abs(ry - ty), abs(rx - tx)))
     return closest(angles, pitch) % 360
 
 def _yaw_facing(robot_position, target_position, angles):
