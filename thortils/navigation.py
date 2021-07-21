@@ -434,21 +434,4 @@ def _yaw_facing(robot_position, target_position, angles):
     tx, _, tz = target_position
     yaw = to_degrees(math.atan2(tx - rx,
                                 tz - rz)) % 360
-    # print(tx - rx)
-    # print(tz - rz)
-    # print(yaw)
-    # plt.xlim(-5, 5)
-    # plt.ylim(-5, 5)
-
-
-
-    # plt.scatter([rx], [rz], s=100)
-    # plt.plot([rx, rx+0.8*math.sin(to_radians(yaw))],
-    #          [rz, rz+0.8*math.cos(to_radians(yaw))], "-o")
-
-    # plt.scatter([tx], [tz], color="red")
-
-    # plt.show()
-
-    # print(robot_position)
     return closest(angles, yaw)
