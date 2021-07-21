@@ -21,6 +21,7 @@ See project README; Poses in ai2thor:
 """
 
 import math
+import matplotlib.pyplot as plt
 from collections import deque
 from .utils import (PriorityQueue, euclidean_dist,
                     to_radians, normalize_angles, roundany,
@@ -324,27 +325,55 @@ def get_shortest_path_to_object(controller, object_id,
         tuple(map(lambda x: roundany(x, grid_size), pos))
         for pos in thor_reachable_positions(controller)]
 
-    # computer goal pose
-    target_position = thor_object_pose(controller,
-                                       object_id, as_tuple=True)
-    start_pose = (start_position, start_rotation)
-    goal_pose = _goal_pose(reachable_positions,
-                           target_position,
-                           v_angles, h_angles,
-                           y=start_position[1],
-                           roll=start_rotation[2])
+    x = [p[0] for p in reachable_positions]
+    z = [p[1] for p in reachable_positions]
+    plt.scatter(x, z)
 
+    # Compute plan; Actually need to call the A* twice.
+    # The first time determines the position the robot will end
+    # up, if the target position is the one to reach,
+    # which is then used to compute the pitch and yaw.
+    # The second time then finds a complete plan that includes
+    # reaching the pitch and yaw.
+    #
+    # Note that you can't just compute goal pitch and yaw
+    # some other way, for example, using the closest position,
+    # because that position may not be the end point on the shortest path.
+    # Closest position != Shortest path!!!!
+    #
+    # The algorithm is pretty fast so calling twice won't be an issue
+    target_position = thor_object_pose(controller, object_id, as_tuple=True)
+    start_pose = (start_position, start_rotation)
     navigation_actions = get_navigation_actions(movement_params)
-    plan = find_navigation_plan(start_pose, goal_pose,
-                                navigation_actions,
-                                reachable_positions,
-                                goal_distance=goal_distance,
-                                grid_size=grid_size,
-                                diagonal_ok=diagonal_ok,
-                                return_pose=True)
+
+    params = dict(goal_distance=goal_distance,
+                  grid_size=grid_size,
+                  diagonal_ok=diagonal_ok,
+                  return_pose=True)
+
+    plan_with_pose1 = find_navigation_plan(start_pose,
+                                           (target_position, start_rotation),
+                                           navigation_actions,
+                                           reachable_positions,
+                                           **params)
+    # Get the last position
+    last_pose = plan_with_pose1[-1]["next_pose"]
+    last_position = (last_pose[0], 0.0, last_pose[1])  # x,y,z
+
+    # Get the true goal pose, with correct pitch and yaw
+    goal_pitch = _pitch_facing(last_position,
+                               target_position, v_angles)
+    goal_yaw = _yaw_facing(last_position,
+                           target_position, h_angles)
+    goal_pose = (target_position, (goal_pitch, goal_yaw, 0.0)) # roll is 0.0
+    plan_with_pose2 = find_navigation_plan(start_pose, goal_pose,
+                                           navigation_actions,
+                                           reachable_positions,
+                                           **params)
+
     poses = []
     actions = []
-    for step in plan:
+    for step in plan_with_pose2:
         actions.append(step["action"])
         x, z, pitch, yaw = step["next_pose"]
         if positions_only:
@@ -365,6 +394,7 @@ def get_shortest_path_to_object(controller, object_id,
         return poses, actions
     else:
         return poses
+
 
 def get_shortest_path_to_object_type(controller, object_type, *args, **kwargs):
     """Similar to get_shortest_path_to_object except
@@ -400,26 +430,25 @@ def _yaw_facing(robot_position, target_position, angles):
        target_position (tuple): x, y, z position
        angles (list): Valid yaw angles
     """
-    angles = normalize_angles(angles)
     rx, _, rz = robot_position
     tx, _, tz = target_position
-    yaw = to_degrees(math.atan2(tx - rx, tz - rz)) % 360
+    yaw = to_degrees(math.atan2(tx - rx,
+                                tz - rz)) % 360
+    # print(tx - rx)
+    # print(tz - rz)
+    # print(yaw)
+    # plt.xlim(-5, 5)
+    # plt.ylim(-5, 5)
+
+
+
+    # plt.scatter([rx], [rz], s=100)
+    # plt.plot([rx, rx+0.8*math.sin(to_radians(yaw))],
+    #          [rz, rz+0.8*math.cos(to_radians(yaw))], "-o")
+
+    # plt.scatter([tx], [tz], color="red")
+
+    # plt.show()
+
+    # print(robot_position)
     return closest(angles, yaw)
-
-
-def _goal_pose(reachable_positions,
-               target_position,
-               v_angles, h_angles,
-               y=0.0, roll=0.0):
-    """Compute the goal pose; the rotation should be facing the target"""
-    x, z =\
-        min(reachable_positions,
-            key=lambda p : euclidean_dist(p, target_position))
-    closest_reachable_pos = (x, y, z)
-    goal_pitch = _pitch_facing(closest_reachable_pos,
-                               target_position, v_angles)
-    goal_yaw = _yaw_facing(closest_reachable_pos,
-                           target_position, h_angles)
-    #target_position
-    goal_pose = (target_position, (goal_pitch, goal_yaw, roll))
-    return goal_pose

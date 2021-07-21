@@ -87,10 +87,10 @@ def test_simple():
 
 
 def test_thor_scene():
-    controller = launch_controller({"scene": "FloorPlan1"})
+    controller = launch_controller({"scene": "FloorPlan2"})
     reachable_positions = thor_reachable_positions(controller)
     start = thor_agent_pose(controller, as_tuple=True)
-    target = thor_closest_object_of_type(controller, "PepperShaker")
+    target = thor_closest_object_of_type(controller, "Bowl")
     target_position = (target["position"]["x"],
                        target["position"]["z"])
     # gx, gz = random.sample(reachable_positions, 1)[0]
@@ -111,7 +111,7 @@ def test_thor_scene():
                                                 navigation_actions,
                                                 reachable_positions,
                                                 grid_size=GRID_SIZE,
-                                                diagonal_ok=True,
+                                                diagonal_ok=False,
                                                 goal_distance=1.0,
                                                 debug=True)
     x = [p[0][0] for p in expanded_poses]
