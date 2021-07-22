@@ -241,3 +241,44 @@ def thor_object_of_type_in_fov(event_or_controller, object_type):
         if obj["objectType"] == object_type:
             return True
     return False
+
+def thor_object_in_receptacle(object_id, possible_receptacle):
+    """
+    Uses the "receptacleObjectIds" field to check.
+    Args:
+        object_id (str): id of object to be checked
+        possible_receptacle (dict): Object dictionary returned by Thor
+
+    Returns:
+        True if object is in receptacle
+    """
+    if possible_receptacle["receptacle"]:
+        return object_id in possible_receptacle["receptacleObjectIds"]
+    return False
+
+def thor_object_receptors(event_or_controller, object_id,
+                          openable_only=False):
+    """Given an object id, returns a list of receptacles
+    that contain this object. Returns a list because it
+    may be the case that an object is in a container
+    and the container is in another container.
+
+    The receptacles in the returned list will be ordered
+    from inner most to outer most. The list contains receptacle object dictionaries.
+
+    If `openable_only` is True, then only return receptors that can be opened."""
+    event = _resolve(event_or_controller)
+    thor_objects = thor_get(event, "objects")
+    receptors = {}  # maps from receptor ID to its list of contained objects
+    for obj in thor_objects:
+        if thor_object_in_receptacle(object_id, obj):
+            receptors[obj["objectId"]] = (obj["receptacleObjectIds"], obj)
+    # create a list from receptors in the inner-outer order. If receptor A, B
+    # are in `receptors` dict and A contains more objects than B, then A must be
+    # more outer than B.
+    sorted_receptor_ids = sorted(receptors, key=lambda r: len(receptors[r][0]))
+    if openable_only:
+        return [receptors[objid][1] for objid in sorted_receptor_ids
+                if receptors[objid][1]["openable"] is True]
+    else:
+        return [receptors[objid][1] for objid in sorted_receptor_ids]

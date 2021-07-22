@@ -22,6 +22,7 @@ See project README; Poses in ai2thor:
 
 import math
 import matplotlib.pyplot as plt
+import time
 from collections import deque
 from .utils import (PriorityQueue, euclidean_dist,
                     to_radians, normalize_angles, roundany,
@@ -307,7 +308,7 @@ def get_shortest_path_to_object(controller, object_id,
 
     Returns:
        If positions_only is True, returns a list of dict(x=,y=,z=) positions
-       If return_plan is True, returns a tuple of poses (or positions) and actions
+       If return_plan is True, returns a tuple of (poses (or positions), actions)
     """
     # Parameters
     v_angles = kwargs.get("v_angles", V_ANGLES)
@@ -350,6 +351,7 @@ def get_shortest_path_to_object(controller, object_id,
                   grid_size=grid_size,
                   diagonal_ok=diagonal_ok,
                   return_pose=True)
+
 
     plan_with_pose1 = find_navigation_plan(start_pose,
                                            (target_position, start_rotation),

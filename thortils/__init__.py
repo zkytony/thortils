@@ -1,6 +1,7 @@
 from . import constants
 from .controller import _resolve, thor_get, launch_controller
 from .object import (thor_object_with_id,
+                     thor_object_type,
                      thor_object_pose,
                      thor_object_poses,
                      thor_object_position,
@@ -11,7 +12,9 @@ from .object import (thor_object_with_id,
                      thor_closest_object_of_type,
                      thor_closest_object_with_properties,
                      thor_object_in_fov,
-                     thor_object_of_type_in_fov)
+                     thor_object_of_type_in_fov,
+                     thor_object_in_receptacle,
+                     thor_object_receptors)
 from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
