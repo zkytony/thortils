@@ -1,0 +1,524 @@
+{
+    "bathroom": {
+        "FloorPlan401": {},
+        "FloorPlan402": {
+            "Cabinet": [
+                "TissueBox"
+            ],
+            "Toilet": [
+                "ToiletPaper",
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan403": {
+            "Cabinet": [
+                "PaperTowelRoll",
+                "DishSponge"
+            ]
+        },
+        "FloorPlan404": {},
+        "FloorPlan405": {
+            "Cabinet": [
+                "Candle"
+            ],
+            "Toilet": [
+                "ToiletPaper",
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan406": {
+            "Toilet": [
+                "ToiletPaper",
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan407": {
+            "Cabinet": [
+                "SprayBottle"
+            ],
+            "Toilet": [
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan408": {
+            "Cabinet": [
+                "SprayBottle"
+            ],
+            "Toilet": [
+                "ToiletPaper",
+                "ToiletPaper",
+                "Cloth"
+            ]
+        },
+        "FloorPlan409": {
+            "Drawer": [
+                "ToiletPaper"
+            ],
+            "Toilet": [
+                "Candle"
+            ]
+        },
+        "FloorPlan410": {
+            "Toilet": [
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan411": {
+            "Toilet": [
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan412": {
+            "Cabinet": [
+                "ToiletPaper"
+            ],
+            "Toilet": [
+                "Cloth"
+            ]
+        },
+        "FloorPlan413": {
+            "Toilet": [
+                "ToiletPaper",
+                "Cloth"
+            ]
+        },
+        "FloorPlan414": {
+            "Cabinet": [
+                "SprayBottle",
+                "CounterTop"
+            ],
+            "Toilet": [
+                "PaperTowelRoll",
+                "DishSponge"
+            ]
+        },
+        "FloorPlan415": {
+            "Toilet": [
+                "ToiletPaper",
+                "Cloth"
+            ]
+        },
+        "FloorPlan416": {
+            "Toilet": [
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan417": {
+            "Cabinet": [
+                "SprayBottle"
+            ],
+            "Toilet": [
+                "Cloth"
+            ]
+        },
+        "FloorPlan418": {},
+        "FloorPlan419": {
+            "Toilet": [
+                "ToiletPaper",
+                "ToiletPaper",
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan420": {
+            "Toilet": [
+                "ToiletPaper",
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan421": {
+            "Toilet": [
+                "ToiletPaper",
+                "DishSponge"
+            ]
+        },
+        "FloorPlan422": {
+            "Cabinet": [
+                "SprayBottle"
+            ],
+            "Toilet": [
+                "Cloth"
+            ]
+        },
+        "FloorPlan423": {
+            "Toilet": [
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan424": {
+            "Cabinet": [
+                "ToiletPaper"
+            ],
+            "Toilet": [
+                "ToiletPaper",
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan425": {
+            "Cabinet": [
+                "ToiletPaper",
+                "ToiletPaper"
+            ],
+            "Toilet": [
+                "Cloth"
+            ]
+        },
+        "FloorPlan426": {
+            "Toilet": [
+                "ToiletPaper",
+                "ToiletPaper"
+            ]
+        },
+        "FloorPlan427": {
+            "Toilet": [
+                "SoapBottle"
+            ]
+        },
+        "FloorPlan428": {
+            "Cabinet": [
+                "Cloth"
+            ],
+            "Toilet": [
+                "Candle",
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan429": {
+            "Toilet": [
+                "SoapBar",
+                "ToiletPaper",
+                "ToiletPaper",
+                "Candle"
+            ]
+        },
+        "FloorPlan430": {
+            "Toilet": [
+                "ToiletPaper"
+            ]
+        }
+    },
+    "bedroom": {
+        "FloorPlan301": {},
+        "FloorPlan302": {},
+        "FloorPlan303": {},
+        "FloorPlan304": {},
+        "FloorPlan305": {},
+        "FloorPlan306": {},
+        "FloorPlan307": {},
+        "FloorPlan308": {},
+        "FloorPlan309": {
+            "Cabinet": [
+                "Safe"
+            ]
+        },
+        "FloorPlan310": {
+            "Cabinet": [
+                "Cabinet"
+            ]
+        },
+        "FloorPlan311": {},
+        "FloorPlan312": {
+            "Drawer": [
+                "CD"
+            ]
+        },
+        "FloorPlan313": {},
+        "FloorPlan314": {},
+        "FloorPlan315": {},
+        "FloorPlan316": {},
+        "FloorPlan317": {},
+        "FloorPlan318": {},
+        "FloorPlan319": {},
+        "FloorPlan320": {},
+        "FloorPlan321": {},
+        "FloorPlan322": {},
+        "FloorPlan323": {},
+        "FloorPlan324": {},
+        "FloorPlan325": {},
+        "FloorPlan326": {},
+        "FloorPlan327": {},
+        "FloorPlan328": {},
+        "FloorPlan329": {},
+        "FloorPlan330": {
+            "Drawer": [
+                "CD"
+            ]
+        }
+    },
+    "kitchen": {
+        "FloorPlan1": {
+            "Cabinet": [
+                "Cup"
+            ],
+            "Drawer": [
+                "Knife"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan10": {
+            "Drawer": [
+                "Knife"
+            ],
+            "Fridge": [
+                "Egg",
+                "Lettuce"
+            ]
+        },
+        "FloorPlan11": {
+            "Cabinet": [
+                "Cup"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan12": {
+            "Cabinet": [
+                "Bowl"
+            ],
+            "Drawer": [
+                "Knife"
+            ]
+        },
+        "FloorPlan13": {},
+        "FloorPlan14": {
+            "Cabinet": [
+                "Plate"
+            ],
+            "Fridge": [
+                "Apple"
+            ]
+        },
+        "FloorPlan15": {
+            "Cabinet": [
+                "Kettle"
+            ],
+            "Drawer": [
+                "Fork",
+                "Spoon"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan16": {
+            "Cabinet": [
+                "Floor"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan17": {
+            "Cabinet": [
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan18": {
+            "Drawer": [
+                "Knife"
+            ],
+            "Fridge": [
+                "Egg",
+                "Tomato"
+            ]
+        },
+        "FloorPlan19": {
+            "Cabinet": [
+                "Plate"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan2": {
+            "Cabinet": [
+                "Plate",
+                "Cup"
+            ],
+            "Drawer": [
+                "ButterKnife"
+            ],
+            "Fridge": [
+                "Lettuce",
+                "Apple"
+            ]
+        },
+        "FloorPlan20": {
+            "Fridge": [
+                "Lettuce",
+                "Egg"
+            ]
+        },
+        "FloorPlan21": {
+            "Cabinet": [
+                "SoapBottle"
+            ],
+            "Drawer": [
+                "Knife"
+            ]
+        },
+        "FloorPlan22": {
+            "Cabinet": [
+                "Mug"
+            ],
+            "Fridge": [
+                "Lettuce"
+            ]
+        },
+        "FloorPlan23": {
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan24": {
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan25": {
+            "Cabinet": [
+                "Mug"
+            ],
+            "Drawer": [
+                "Ladle"
+            ],
+            "Fridge": [
+                "Egg",
+                "Tomato"
+            ]
+        },
+        "FloorPlan26": {
+            "Drawer": [
+                "Fork",
+                "Spoon"
+            ],
+            "Fridge": [
+                "Lettuce",
+                "Egg"
+            ]
+        },
+        "FloorPlan27": {
+            "Cabinet": [
+                "Pan"
+            ],
+            "Fridge": [
+                "Apple"
+            ]
+        },
+        "FloorPlan28": {
+            "Fridge": [
+                "Potato"
+            ]
+        },
+        "FloorPlan29": {
+            "Cabinet": [
+                "Bowl"
+            ],
+            "Fridge": [
+                "Egg",
+                "Tomato"
+            ]
+        },
+        "FloorPlan3": {
+            "Cabinet": [
+                "Pan"
+            ],
+            "Fridge": [
+                "Tomato"
+            ]
+        },
+        "FloorPlan30": {
+            "Fridge": [
+                "Lettuce",
+                "Tomato",
+                "Egg"
+            ]
+        },
+        "FloorPlan4": {
+            "Fridge": [
+                "Lettuce",
+                "Egg"
+            ]
+        },
+        "FloorPlan5": {
+            "Cabinet": [
+                "Cabinet"
+            ],
+            "Fridge": [
+                "Apple"
+            ]
+        },
+        "FloorPlan6": {
+            "Cabinet": [
+                "Pot"
+            ],
+            "Fridge": [
+                "Egg"
+            ]
+        },
+        "FloorPlan7": {
+            "Drawer": [
+                "Spoon",
+                "Fork"
+            ],
+            "Fridge": [
+                "Tomato",
+                "WineBottle",
+                "Potato"
+            ]
+        },
+        "FloorPlan8": {
+            "Cabinet": [
+                "SprayBottle"
+            ]
+        },
+        "FloorPlan9": {
+            "Cabinet": [
+                "Cup"
+            ],
+            "Fridge": [
+                "Egg",
+                "Lettuce",
+                "Apple"
+            ]
+        }
+    },
+    "living_room": {
+        "FloorPlan201": {},
+        "FloorPlan202": {},
+        "FloorPlan203": {},
+        "FloorPlan204": {},
+        "FloorPlan205": {},
+        "FloorPlan206": {},
+        "FloorPlan207": {},
+        "FloorPlan208": {},
+        "FloorPlan209": {},
+        "FloorPlan210": {},
+        "FloorPlan211": {},
+        "FloorPlan212": {},
+        "FloorPlan213": {},
+        "FloorPlan214": {},
+        "FloorPlan215": {},
+        "FloorPlan216": {},
+        "FloorPlan217": {},
+        "FloorPlan218": {},
+        "FloorPlan219": {},
+        "FloorPlan220": {},
+        "FloorPlan221": {},
+        "FloorPlan222": {},
+        "FloorPlan223": {},
+        "FloorPlan224": {},
+        "FloorPlan225": {},
+        "FloorPlan226": {},
+        "FloorPlan227": {},
+        "FloorPlan228": {},
+        "FloorPlan229": {
+            "Box": [
+                "CoffeeTable"
+            ]
+        },
+        "FloorPlan230": {}
+    }
+}
