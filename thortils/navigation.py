@@ -308,7 +308,14 @@ def get_shortest_path_to_object(controller, object_id,
 
     Returns:
        If positions_only is True, returns a list of dict(x=,y=,z=) positions
-       If return_plan is True, returns a tuple of (poses (or positions), actions)
+       If return_plan is True, returns plan
+
+        plan: List of (action_name, params) tuples representing actions.
+            The params are specific to the action; For movements, it's
+            (forward, pitch, yaw). For opening, it is an object id.
+        poses: List of (dict(x=,y=,z=), dict(x=,y=,z=)) (position, rotation) tuples.
+            where each pose at index i corresponds to the pose resulting from taking
+            action i.
     """
     # Parameters
     v_angles = kwargs.get("v_angles", V_ANGLES)
@@ -353,29 +360,36 @@ def get_shortest_path_to_object(controller, object_id,
                   return_pose=True)
 
 
-    plan_with_pose1 = find_navigation_plan(start_pose,
-                                           (target_position, start_rotation),
-                                           navigation_actions,
-                                           reachable_positions,
+    tentative_plan = find_navigation_plan(start_pose,
+                                          (target_position, start_rotation),
+                                          navigation_actions,
+                                          reachable_positions,
                                            **params)
-    # Get the last position
-    last_pose = plan_with_pose1[-1]["next_pose"]
-    last_position = (last_pose[0], 0.0, last_pose[1])  # x,y,z
+    if tentative_plan is None:
+        raise ValueError("Plan not found from {} to {}"\
+                         .format((start_position, start_rotation), object_id))
+    if len(tentative_plan) == 0:
+        final_plan = []   # it appears that the robot is at where it should be
 
-    # Get the true goal pose, with correct pitch and yaw
-    goal_pitch = _pitch_facing(last_position,
-                               target_position, v_angles)
-    goal_yaw = _yaw_facing(last_position,
-                           target_position, h_angles)
-    goal_pose = (target_position, (goal_pitch, goal_yaw, 0.0)) # roll is 0.0
-    plan_with_pose2 = find_navigation_plan(start_pose, goal_pose,
-                                           navigation_actions,
-                                           reachable_positions,
-                                           **params)
+    else:
+        # Get the last position
+        last_pose = tentative_plan[-1]["next_pose"]
+        last_position = (last_pose[0], 0.0, last_pose[1])  # x,y,z
+
+        # Get the true goal pose, with correct pitch and yaw
+        goal_pitch = _pitch_facing(last_position,
+                                   target_position, v_angles)
+        goal_yaw = _yaw_facing(last_position,
+                               target_position, h_angles)
+        goal_pose = (target_position, (goal_pitch, goal_yaw, 0.0)) # roll is 0.0
+        final_plan = find_navigation_plan(start_pose, goal_pose,
+                                          navigation_actions,
+                                          reachable_positions,
+                                       **params)
 
     poses = []
     actions = []
-    for step in plan_with_pose2:
+    for step in final_plan:
         actions.append(step["action"])
         x, z, pitch, yaw = step["next_pose"]
         if positions_only:
