@@ -6,10 +6,12 @@ import time
 import random
 
 from thortils.navigation import (find_navigation_plan,
-                                 get_navigation_actions)
+                                 get_navigation_actions,
+                                 plot_navigation_search_result)
 from thortils.constants import MOVEMENT_PARAMS, GRID_SIZE
 from thortils import (thor_reachable_positions,
                       launch_controller,
+                      thor_object_with_id,
                       thor_closest_object_of_type,
                       thor_agent_pose)
 
@@ -32,17 +34,6 @@ def read_map(floormap, grid_size=0.25):
                 goal = ((x*grid_size, 0, z*grid_size), (0, 270, 0))
     return reachable_positions, start, goal, (width, length)
 
-def plot_map(ax, reachable_positions, start, goal):
-    x = [p[0] for p in reachable_positions]
-    z = [p[1] for p in reachable_positions]
-    ax.scatter(x, z, s=300, c='gray', zorder=1)
-
-    xs, _, zs = start[0]
-    ax.scatter([xs], [zs], s=200, c='red', zorder=4)
-
-    xg, _, zg = goal[0]
-    ax.scatter([xg], [zg], s=200, c='green', zorder=4)
-
 
 def test_simple():
     floormap1 =\
@@ -62,10 +53,6 @@ def test_simple():
     reachable_positions, start, goal, dim = read_map(floormap1, GRID_SIZE)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
 
-    fig, ax = plt.subplots()
-    ax.set_xlim(-GRID_SIZE, dim[0] * GRID_SIZE)
-    ax.set_ylim(-GRID_SIZE, dim[1] * GRID_SIZE)
-    plot_map(ax, reachable_positions, start, goal)
     _start_time = time.time()
     plan, expanded_poses = find_navigation_plan(start, goal,
                                                 navigation_actions,
@@ -73,21 +60,20 @@ def test_simple():
                                                 diagonal_ok=True,
                                                 grid_size=GRID_SIZE,
                                                 debug=True)
-    print("Plan found in {:.3f}s".format(time.time() - _start_time))
-    x = [p[0][0] for p in expanded_poses]
-    z = [p[0][2] for p in expanded_poses]
-    c = [i for i in range(0, len(expanded_poses))]
-    ax.scatter(x, z, s=120, c=c, zorder=2, cmap="bone")
+    if plan is not None:
+        print("Plan found in {:.3f}s".format(time.time() - _start_time))
+        pprint([step["action"] for step in plan])
+        fig, ax = plt.subplots()
+        plot_navigation_search_result(start, goal, plan, expanded_poses,
+                                      reachable_positions, GRID_SIZE, ax=ax)
+        ax.set_xlim(-GRID_SIZE, dim[0] * GRID_SIZE)
+        ax.set_ylim(-GRID_SIZE, dim[1] * GRID_SIZE)
+        plt.show(block=True)
 
-    for step in plan:
-        x, z, _, _ = step["next_pose"]
-        ax.scatter([x], [z], s=120, zorder=2, c="orange")
-
-    plt.show()
 
 
 def test_thor_scene():
-    controller = launch_controller({"scene": "FloorPlan2"})
+    controller = launch_controller({"scene": "FloorPlan1"})
     reachable_positions = thor_reachable_positions(controller)
     start = thor_agent_pose(controller, as_tuple=True)
     target = thor_closest_object_of_type(controller, "Bowl")
@@ -98,13 +84,6 @@ def test_thor_scene():
     goal = (gx, 0, gz), (0, 135, 0)
     navigation_actions = get_navigation_actions(MOVEMENT_PARAMS)
 
-    x = [p[0] for p in reachable_positions]
-    z = [p[1] for p in reachable_positions]
-
-    fig, ax = plt.subplots()
-    ax.set_xlim(min(x)-GRID_SIZE, max(x)+GRID_SIZE)
-    ax.set_ylim(min(z)-GRID_SIZE, max(z)+GRID_SIZE)
-    plot_map(ax, reachable_positions, start, goal)
     _start_time = time.time()
 
     plan, expanded_poses = find_navigation_plan(start, goal,
@@ -114,19 +93,13 @@ def test_thor_scene():
                                                 diagonal_ok=False,
                                                 goal_distance=1.0,
                                                 debug=True)
-    x = [p[0][0] for p in expanded_poses]
-    z = [p[0][2] for p in expanded_poses]
-    c = [i for i in range(0, len(expanded_poses))]
-    ax.scatter(x, z, s=120, c=c, zorder=2, cmap="bone")
-
     if plan is not None:
         print("Plan found in {:.3f}s".format(time.time() - _start_time))
-        for step in plan:
-            x, z, _, _ = step["next_pose"]
-            ax.scatter([x], [z], s=120, zorder=2, c="orange")
-            print(step["action"])
-
-    plt.show(block=True)
+        pprint([step["action"] for step in plan])
+        fig, ax = plt.subplots()
+        plot_navigation_search_result(start, goal, plan, expanded_poses,
+                                      reachable_positions, GRID_SIZE, ax=ax)
+        plt.show(block=True)
 
 if __name__ == "__main__":
-    test_thor_scene()
+    test_simple()

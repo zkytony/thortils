@@ -333,10 +333,6 @@ def get_shortest_path_to_object(controller, object_id,
         tuple(map(lambda x: roundany(x, grid_size), pos))
         for pos in thor_reachable_positions(controller)]
 
-    x = [p[0] for p in reachable_positions]
-    z = [p[1] for p in reachable_positions]
-    plt.scatter(x, z)
-
     # Compute plan; Actually need to call the A* twice.
     # The first time determines the position the robot will end
     # up, if the target position is the one to reach,
@@ -359,12 +355,20 @@ def get_shortest_path_to_object(controller, object_id,
                   diagonal_ok=diagonal_ok,
                   return_pose=True)
 
+    tentative_plan, expanded_poses = find_navigation_plan(start_pose,
+                                                          (target_position, start_rotation),
+                                                          navigation_actions,
+                                                          reachable_positions,
+                                                          debug=True,
+                                                          **params)
 
-    tentative_plan = find_navigation_plan(start_pose,
-                                          (target_position, start_rotation),
-                                          navigation_actions,
-                                          reachable_positions,
-                                           **params)
+    # plot_navigation_search_result(start_pose,
+    #                               (target_position, start_rotation),
+    #                               tentative_plan,
+    #                               expanded_poses,
+    #                               reachable_positions, grid_size, ax=None)
+    # plt.show()
+
     if tentative_plan is None:
         raise ValueError("Plan not found from {} to {}"\
                          .format((start_position, start_rotation), object_id))
@@ -374,18 +378,18 @@ def get_shortest_path_to_object(controller, object_id,
     else:
         # Get the last position
         last_pose = tentative_plan[-1]["next_pose"]
-        last_position = (last_pose[0], 0.0, last_pose[1])  # x,y,z
+        last_position = (last_pose[0], start_position[1], last_pose[1])  # x,y,z
 
         # Get the true goal pose, with correct pitch and yaw
         goal_pitch = _pitch_facing(last_position,
                                    target_position, v_angles)
         goal_yaw = _yaw_facing(last_position,
                                target_position, h_angles)
-        goal_pose = (target_position, (goal_pitch, goal_yaw, 0.0)) # roll is 0.0
+        goal_pose = (target_position, (goal_pitch, goal_yaw, start_rotation[2])) # roll is 0.0
         final_plan = find_navigation_plan(start_pose, goal_pose,
                                           navigation_actions,
                                           reachable_positions,
-                                       **params)
+                                          **params)
 
     poses = []
     actions = []
@@ -428,12 +432,19 @@ def _pitch_facing(robot_position, target_position, angles):
     Args:
        robot_position (tuple): x, y, z position
        target_position (tuple): x, y, z position
-       angles (list): Valid pitch angles
+       angles (list): Valid pitch angles (possible values for pitch
+           in ai2thor agent rotation). Note that negative
+           negative is up, positive is down
+    Returns:
+        .pitch angle between 0 - 360 degrees
     """
+    angles = normalize_angles(angles)
     rx, ry, _ = robot_position
     tx, ty, _ = target_position
-    pitch = to_degrees(math.atan2(abs(ry - ty), abs(rx - tx)))
-    return closest(angles, pitch) % 360
+    # remember for pitch in thor, negative is up, positive is down
+    pitch = to_degrees(math.atan2(ry - ty, # reverse y axis direction because of ^^
+                                  tx - rx)) % 360
+    return closest(angles, pitch)
 
 def _yaw_facing(robot_position, target_position, angles):
     """
@@ -445,9 +456,53 @@ def _yaw_facing(robot_position, target_position, angles):
        robot_position (tuple): x, y, z position
        target_position (tuple): x, y, z position
        angles (list): Valid yaw angles
+    Returns:
+        .yaw angle between 0 - 360 degrees
     """
     rx, _, rz = robot_position
     tx, _, tz = target_position
     yaw = to_degrees(math.atan2(tx - rx,
                                 tz - rz)) % 360
     return closest(angles, yaw)
+
+
+#--------- Visualization ------------#
+def plot_navigation_search_result(start, goal, plan, expanded_poses,
+                                  reachable_positions, grid_size, ax=None):
+    """
+    Plots the reachable positions (the grid map),
+    the expanded poses during the search, and the plan.
+
+    start, goal (tuple): position, rotation poses
+    """
+    def plot_map(ax, reachable_positions, start, goal):
+        x = [p[0] for p in reachable_positions]
+        z = [p[1] for p in reachable_positions]
+        ax.scatter(x, z, s=300, c='gray', zorder=1)
+
+        xs, _, zs = start[0]
+        ax.scatter([xs], [zs], s=200, c='red', zorder=4)
+
+        xg, _, zg = goal[0]
+        ax.scatter([xg], [zg], s=200, c='green', zorder=4)
+
+    ###start
+    if ax is None:
+        ax = plt.gca()
+
+    x = [p[0] for p in reachable_positions]
+    z = [p[1] for p in reachable_positions]
+    plot_map(ax, reachable_positions, start, goal)
+
+    ax.set_xlim(min(x)-grid_size, max(x)+grid_size)
+    ax.set_ylim(min(z)-grid_size, max(z)+grid_size)
+
+    x = [p[0][0] for p in expanded_poses]
+    z = [p[0][2] for p in expanded_poses]
+    c = [i for i in range(0, len(expanded_poses))]
+    ax.scatter(x, z, s=120, c=c, zorder=2, cmap="bone")
+
+    if plan is not None:
+        for step in plan:
+            x, z, _, _ = step["next_pose"]
+            ax.scatter([x], [z], s=120, zorder=2, c="orange")
