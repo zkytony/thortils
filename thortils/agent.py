@@ -1,5 +1,8 @@
 import numpy as np
+import random
+from ai2thor.controller import Controller
 from .controller import thor_get, _resolve
+from .constants import V_ANGLES, H_ANGLES
 
 
 def _reachable_thor_loc2d(controller):
@@ -87,3 +90,26 @@ def thor_camera_horizon(event_or_controller):
     event = _resolve(event_or_controller)
     cameraHorizon = thor_get(event, "agent", "cameraHorizon")
     return cameraHorizon
+
+
+def thor_place_agent_randomly(controller,
+                              v_angles=V_ANGLES,
+                              h_angles=H_ANGLES):
+    """Place the agent randomly in an environment;
+    Both the position and rotation will be random,
+    but valid.
+
+    Args:
+       controller_or_reachable_positions (list or or Controller)
+       v_angles (list): List of valid pitch (tilt) angles
+       h_angles (list): List of valid yaw (rotation) angles"""
+    reachable_positions = thor_reachable_positions(controller)
+    agent_pose = thor_agent_pose(controller.last_event, as_tuple=False)
+    pos = random.sample(reachable_positions, 1)[0]
+    pitch = random.sample(v_angles, 1)[0]
+    yaw = random.sample(h_angles, 1)[0]
+    return controller.step(action="Teleport",
+                           position=dict(x=pos[0], y=agent_pose[0]['y'], z=pos[1]),
+                           rotation=dict(x=agent_pose[1]['x'], y=yaw, z=agent_pose[1]['z']),
+                           horizon=pitch,
+                           standing=True)
