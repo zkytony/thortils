@@ -44,3 +44,21 @@ def launch_controller(config):
         port                       = config.get("port"                         , 0),
         headless                   = config.get("headless"                     , False))
     return controller
+
+
+if __name__ == "__main__":
+    # python -m thortils.controller
+    import sys
+    scene = "FloorPlan1"
+    debug = False
+    if len(sys.argv) > 1:
+        for arg in sys.argv[1:]:
+            if arg == "--debug":
+                debug = True
+            if arg.startswith("Floor"):
+                scene = arg
+    controller = launch_controller({"scene": scene})
+    if debug:
+        # Enters debugger with an event object to play with
+        event = controller.step(action="Pass")
+        import pdb; pdb.set_trace()

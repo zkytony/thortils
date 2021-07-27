@@ -93,3 +93,20 @@ of parameters. For navigation actions, we also use a format as follows:
 (action_name, (forward, h_angle, v_angle))
 ```
 We sometimes call variables "action\_delta" or "delta" to refer to `(forward, h_angle, v_angle)`
+
+
+## Tips
+
+### Start controller
+```
+python -m thortils.controller
+```
+You can specify a scene
+```
+python -m thortils.controller FloorPlan2
+```
+The following enters debugger with an event object to play with
+```
+python -m thortils.controller --debug
+python -m thortils.controller FloorPlan2 --debug
+```
