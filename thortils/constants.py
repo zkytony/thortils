@@ -78,6 +78,7 @@ LEVELS = {
     "bedroom": [i for i in range(1, 31)],
     "bathroom": [i for i in range(1, 31)],
 }
+SCENE_TYPES = list(LEVELS.keys())
 
 
 #-------------------------------------------------------------------------------

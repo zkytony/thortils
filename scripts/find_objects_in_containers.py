@@ -1,12 +1,17 @@
 # Print objects in openable containers
 
+from thortils.constants import SCENE_TYPES
 from thortils.scene import SceneDataset, ithor_scene_names
 from thortils.object import thor_object_type
 import json
 
-SCENE_DATASET = SceneDataset.load("../scenes")
+SCENE_DATA_PATH = "../scenes"
+OUTPUT_PATH = "../info/containment.json"
+
+SCENE_DATASET = SceneDataset.load(SCENE_DATA_PATH)
+
 DATA = {}
-for scene_type in {"kitchen", "bathroom", "bedroom", "living_room"}:
+for scene_type in SCENE_TYPES:
     print(":{}:".format(scene_type))
     DATA[scene_type] = {}
     print(scene_type)
@@ -30,5 +35,5 @@ for scene_type in {"kitchen", "bathroom", "bedroom", "living_room"}:
                 DATA[scene_type][scene_name][container] = obj_in_containers
         print() # blank line
 
-with open("../info/containment.json", "w") as f:
+with open(OUTPUT_PATH, "w") as f:
     json.dump(DATA, f, indent=4, sort_keys=True)
