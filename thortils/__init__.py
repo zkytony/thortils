@@ -20,7 +20,8 @@ from .agent import (thor_reachable_positions,
                     thor_agent_position,
                     thor_apply_pose,
                     thor_camera_horizon,
-                    thor_place_agent_randomly)
+                    thor_place_agent_randomly,
+                    thor_teleport)
 from .interactions import (OpenObject,
                            CloseObject,
                            PickupObject,

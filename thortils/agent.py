@@ -67,6 +67,14 @@ def thor_apply_pose(controller, pose):
                     rotation=dict(y=th))
     controller.step(action="Pass")  #https://github.com/allenai/ai2thor/issues/538
 
+def thor_teleport(controller, position, rotation, horizon):
+    """Calls the Teleport function with relevant parameters."""
+    return controller.step(action="Teleport",
+                           position=position,
+                           rotation=rotation,
+                           horizon=horizon,
+                           standing=True)  # we don't deal with this
+
 
 def thor_camera_pose(event_or_controller, get_tuples=False):
     """
