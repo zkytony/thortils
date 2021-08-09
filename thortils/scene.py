@@ -34,8 +34,18 @@ def robothor_scene_names(scene_type="Train", levels=None, nums=None):
 
 def ithor_scene_names(scene_type="kitchen", levels=None):
     """
-    Returns a list of scene names
+    Returns a list of scene names.
+
+    Args:
+        scene_type (str): type of scene e.g. kitchen
+        levels (enumerable): the levels you want to include.
+            Note that this should always contain numbers greater than
+            or equal to 1 and less than or equal to 30,
+            regardless of scene_type.
     """
+    if levels is not None:
+        if max(levels) > 30 or min(levels) < 1:
+            raise ValueError("Invalid levels. Must be >= 1 and < 31")
     scenes = dict(
         kitchen = [f"FloorPlan{i}" for i in range(1, 31)],
         living_room = [f"FloorPlan{200 + i}" for i in range(1, 31)],
@@ -50,7 +60,7 @@ def ithor_scene_names(scene_type="kitchen", levels=None):
     raise ValueError("Unknown scene type {}".format(scene_type))
 
 
-def convert_scene_to_grid_map(controller, scene_info, grid_size):
+def convert_scene_to_grid_map(controller, scene_name, grid_size):
     """Converts an Ai2Thor scene to a GridMap"""
     x, z = thor_reachable_positions(controller, by_axes=True)
 
@@ -90,7 +100,7 @@ def convert_scene_to_grid_map(controller, scene_info, grid_size):
                  if (x,y) not in positions}
 
     grid_map = GridMap(width, length, obstacles,
-                       name=scene_info.scene_name,
+                       name=scene_name,
                        ranges_in_thor=(thor_gx_range, thor_gy_range))
 
     return grid_map

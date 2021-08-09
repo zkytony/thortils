@@ -7,7 +7,7 @@ def main():
     floor_plan = "FloorPlan22"
     scene_info = SceneDataset.load_single("../scenes", floor_plan)
     controller = launch_controller({"scene":floor_plan})
-    grid_map = convert_scene_to_grid_map(controller, scene_info, 0.25)
+    grid_map = convert_scene_to_grid_map(controller, floor_plan, 0.25)
 
     print(floor_plan)
     for y in range(grid_map.length):
