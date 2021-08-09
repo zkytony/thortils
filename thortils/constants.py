@@ -72,6 +72,7 @@ EXCLUDED_RECEPTACLES=[]   # not actually used
 
 #-------------------------------------------------------------------------------
 # What scenes are we using
+from thortils.scene import ithor_scene_names
 LEVELS = {
     "kitchen": [i for i in range(1, 31)],
     "living_room": [i for i in range(1, 31)],
@@ -79,6 +80,14 @@ LEVELS = {
     "bathroom": [i for i in range(1, 31)],
 }
 SCENE_TYPES = list(LEVELS.keys())
+KITCHEN_TRAIN_SCENES = ithor_scene_names("kitchen", range(1,21))
+KITCHEN_VAL_SCENES   = ithor_scene_names("kitchen", range(21,31))
+LIVING_ROOM_TRAIN_SCENES = ithor_scene_names("living_room", range(1,21))
+LIVING_ROOM_VAL_SCENES   = ithor_scene_names("living_room", range(21,31))
+BEDROOM_TRAIN_SCENES = ithor_scene_names("bedroom", range(1,21))
+BEDROOM_VAL_SCENES   = ithor_scene_names("bedroom", range(21,31))
+BATHROOM_TRAIN_SCENES = ithor_scene_names("bathroom", range(1,21))
+BATHROOM_VAL_SCENES   = ithor_scene_names("bathroom", range(21,31))
 
 
 #-------------------------------------------------------------------------------
@@ -119,7 +128,7 @@ def get_acceptable_thor_actions():
 OBJTYPES_ON_PLOT = {
     "AlarmClock",
     "AluminumFoil",
-    # "Apple",
+    "Apple",
     "AppleSliced*",
     "ArmChair",
     "BaseballBat",
@@ -175,7 +184,7 @@ OBJTYPES_ON_PLOT = {
     "Ladle",
     "Laptop",
     "LaundryHamper",
-    # "Lettuce",
+    "Lettuce",
     "LettuceSliced*",
     "LightSwitch",
     "Microwave",
