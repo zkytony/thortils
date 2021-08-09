@@ -48,13 +48,16 @@ def thor_agent_pose(event_or_controller, as_tuple=False):
     else:
         return p, r
 
-def thor_agent_position(event_or_controller):
+def thor_agent_position(event_or_controller, as_tuple=False):
     """Returns a tuple (pos, rot),
     pos: dict (x=, y=, z=)
     """
     event = _resolve(event_or_controller)
     position = thor_get(event, "agent", "position")
-    return position
+    if as_tuple:
+        return (position["x"], position["y"], position["z"])
+    else:
+        return position
 
 def thor_apply_pose(controller, pose):
     """Given a 2d pose (x,y,th), teleport the agent to that pose"""
