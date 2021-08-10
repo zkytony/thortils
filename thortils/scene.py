@@ -101,7 +101,8 @@ def convert_scene_to_grid_map(controller, scene_name, grid_size):
 
     grid_map = GridMap(width, length, obstacles,
                        name=scene_name,
-                       ranges_in_thor=(thor_gx_range, thor_gy_range))
+                       ranges_in_thor=(thor_gx_range, thor_gy_range),
+                       grid_size=grid_size)
 
     return grid_map
 

@@ -22,7 +22,7 @@ class GridMap:
     """
 
     def __init__(self, width, length, obstacles, name="grid_map",
-                 ranges_in_thor=None):
+                 ranges_in_thor=None, grid_size=None):
         """
         xpos (list): list of x coordinates for free cells
         ypos (list): list of y coordinates for free cells
@@ -43,15 +43,18 @@ class GridMap:
 
         self.name = name
         self.ranges_in_thor = ranges_in_thor
+        self.grid_size = grid_size
 
         # Caches the computations
         self._geodesic_dist_cache = {}
         self._blocked_cache = {}
 
-    def to_thor_pose(self, x, y, th, grid_size=None):
-        return (*self.to_thor_pos(x, y, grid_size=grid_size), to_degrees(th))
+    def to_thor_pose(self, x, y, th):
+        """Given a point (x, y) in the grid map and th (radians),
+        convert it to a tuple (thor_x, thor_y, degrees_th)"""
+        return (*self.to_thor_pos(x, y), to_degrees(th))
 
-    def to_thor_pos(self, x, y, grid_size=None):
+    def to_thor_pos(self, x, y):
         """
         Given a point (x,y) in the grid map, convert it to (x,z) in
         the THOR coordinte system (grid size is accounted for).
@@ -63,22 +66,22 @@ class GridMap:
         thor_gy_min, thor_gy_max = self.ranges_in_thor[1]
         thor_gx = remap(x, 0, self.width, thor_gx_min, thor_gx_max)
         thor_gy = remap(y, 0, self.length, thor_gy_min, thor_gy_max)
-        if grid_size is not None:
+        if self.grid_size is not None:
             # Snap to grid
-            return (grid_size * round((thor_gx * grid_size) / grid_size),
-                    grid_size * round((thor_gy * grid_size) / grid_size))
+            return (self.grid_size * round((thor_gx * self.grid_size) / self.grid_size),
+                    self.grid_size * round((thor_gy * self.grid_size) / self.grid_size))
         else:
             return (thor_gx, thor_gy)
 
-    def to_grid_pos(self, thor_x, thor_z, grid_size=None, avoid_obstacle=False):
+    def to_grid_pos(self, thor_x, thor_z, avoid_obstacle=False):
         """
         Convert thor location to grid map location. If grid_size is specified,
         then will regard thor_x, thor_z as the original Unity coordinates.
         If not, then will regard them as grid indices but with origin not at (0,0).
         """
-        if grid_size is not None:
-            thor_gx = int(round(thor_x / grid_size))
-            thor_gy = int(round(thor_z / grid_size))
+        if self.grid_size is not None:
+            thor_gx = int(round(thor_x / self.grid_size))
+            thor_gy = int(round(thor_z / self.grid_size))
         else:
             thor_gx = thor_x
             thor_gy = thor_z

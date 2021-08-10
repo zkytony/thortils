@@ -85,8 +85,8 @@ def _move_by(robot_pose, action_delta,
              grid_size=None, diagonal_ok=False):
     """
     Given 2D robot pose (x, z, pitch, yaw), and an action,
-    which is (forward, h_angle, v_angle); The angles are in RADIANS
-    Ai2Thor uses this model, as seen by MoveAhead, MoveLeft etc. actions.
+    which is (forward, h_angle, v_angle)
+    Ai2Thor uses this model, as seen by MoveAhead, RotateLeft etc. actions.
     """
     rx, rz, pitch, yaw = robot_pose
     forward, h_angle, v_angle = action_delta
@@ -102,14 +102,15 @@ def _move_by(robot_pose, action_delta,
 
 def transform_pose(robot_pose, action, schema="vw",
                    diagonal_ok=False, grid_size=None):
-    """
-    Transform pose of robot in 2D
-    robot_pose (tuple): Either 2d pose (x,y,yaw,pitch)
-           or a tuple (position, rotation):
-               position (tuple): tuple (x, y, z)
-               rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
-    action:
-           ("ActionName", delta), where delta is the change, format dependent on schema
+    """Transform pose of robot in 2D
+
+    Args:
+       robot_pose (tuple): Either 2d pose (x,y,yaw,pitch).
+              or a tuple (position, rotation):
+                  position (tuple): tuple (x, y, z)
+                  rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
+       action:
+              ("ActionName", delta), where delta is the change, format dependent on schema
 
     Returns the transformed pose in the same form as input
     """
