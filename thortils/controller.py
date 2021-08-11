@@ -25,6 +25,11 @@ def thor_get(event, *keys):
     else:
         return event.metadata
 
+def thor_scene_from_controller(controller):
+    return controller.scene.split("_")[0]
+
+def thor_grid_size_from_controller(controller):
+    return controller.initialization_parameters["gridSize"]
 
 def launch_controller(config):
     controller = Controller(

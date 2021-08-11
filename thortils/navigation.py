@@ -507,3 +507,33 @@ def plot_navigation_search_result(start, goal, plan, expanded_poses,
         for step in plan:
             x, z, _, _ = step["next_pose"]
             ax.scatter([x], [z], s=120, zorder=2, c="orange")
+
+
+#--------- Metrics ------------#
+def spl_ratio(li, pi, Si):
+    """spl ratio for a single trial.
+    li, pi, Si stands for shortest_path_length, actual_path_length, success for trial i.
+    """
+    if max(pi, li) > 0:
+        pl_ratio = li / max(pi, li)
+    else:
+        pl_ratio = 1.0
+    return float(Si) * pl_ratio
+
+
+def compute_spl(episode_results):
+    """
+    Reference: https://arxiv.org/pdf/1807.06757.pdf
+
+    Args:
+        episode_results (list) List of tuples
+            (shortest_path_distance, actual_path_distance, success),
+             as required by the formula. `actual_path_distance` and
+            `shortest_path_distance` are floats; success is boolean.
+    Return:
+        float: the SPL metric
+    """
+    # li, pi, Si stands for
+    # shortest_path_distance, actual_path_distance, success for trial i.
+    return sum(spl_ratio(li, pi, Si)
+               for li, pi, Si in episode_results) / len(episode_results)

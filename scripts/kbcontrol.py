@@ -18,7 +18,6 @@ def main():
     controls = {
         "w": "MoveAhead",
         "a": "RotateLeft",
-        "s": "MoveBack",
         "d": "RotateRight",
         "e": "LookUp",
         "c": "LookDown"

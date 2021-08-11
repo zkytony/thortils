@@ -1,5 +1,9 @@
 from . import constants
-from .controller import _resolve, thor_get, launch_controller
+from .controller import (_resolve,
+                         thor_get,
+                         launch_controller,
+                         thor_scene_from_controller,
+                         thor_grid_size_from_controller)
 from .object import (thor_object_with_id,
                      thor_object_type,
                      thor_object_pose,
@@ -21,7 +25,9 @@ from .agent import (thor_reachable_positions,
                     thor_apply_pose,
                     thor_camera_horizon,
                     thor_place_agent_randomly,
-                    thor_teleport)
+                    thor_teleport,
+                    thor_pose_as_tuple,
+                    thor_pose_as_dict)
 from .interactions import (OpenObject,
                            CloseObject,
                            PickupObject,
@@ -37,6 +43,7 @@ from .interactions import (OpenObject,
 from .scene import (robothor_scene_names, ithor_scene_names,
                     convert_scene_to_grid_map)
 
+from .navigation import compute_spl, spl_ratio
 
 # Please make sure this is correct.
 AI2THOR_VERSION = '3.3.4'

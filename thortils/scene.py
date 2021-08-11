@@ -60,9 +60,24 @@ def ithor_scene_names(scene_type="kitchen", levels=None):
     raise ValueError("Unknown scene type {}".format(scene_type))
 
 
-def convert_scene_to_grid_map(controller, scene_name, grid_size):
-    """Converts an Ai2Thor scene to a GridMap"""
-    x, z = thor_reachable_positions(controller, by_axes=True)
+def convert_scene_to_grid_map(controller_or_reachable_positions,
+                              scene_name, grid_size):
+    """Converts an Ai2Thor scene to a GridMap;
+    Args:
+        controller_or_reachable_positions: Either a Controller,
+        or reachable positions (output of thor_reachable_positions)"""
+    if isinstance(controller_or_reachable_positions, Controller):
+        controller = controller_or_reachable_positions
+        x, z = thor_reachable_positions(controller, by_axes=True)
+    else:
+        reachable_positions = controller_or_reachable_positions
+        if type(reachable_positions) == list:
+            x, z = map(list, zip(*reachable_positions))
+        elif type(reachable_positions) == tuple and len(reachable_positions) == 2:
+            x, z = reachable_positions
+        else:
+            raise ValueError("Cannot understand first argument"
+                             "{}".format(controller_or_reachable_positions))
 
     # obtain grid indices for coordinates  (origin NOT at (0,0))
     thor_gx = np.round(x / grid_size).astype(int)
