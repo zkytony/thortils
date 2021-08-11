@@ -44,6 +44,3 @@ from .scene import (robothor_scene_names, ithor_scene_names,
                     convert_scene_to_grid_map)
 
 from .navigation import compute_spl, spl_ratio
-
-# Please make sure this is correct.
-AI2THOR_VERSION = '3.3.4'
