@@ -11,6 +11,8 @@ setup(name='thortils',
       description='Code related to Ai2-Thor. Try to do one thing once.',
       python_requires='>3.6',
       install_requires=[
+          'numpy',
+          'matplotlib',
           'ai2thor=={}'.format(AI2THOR_VERSION)
       ],
       author='Kaiyu Zheng',
