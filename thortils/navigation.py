@@ -82,8 +82,8 @@ def _valid_pose(pose, reachable_positions):
         and 0 <= pose[2] < 360.0\
         and 0 <= pose[3] < 360.0
 
-def _move_by(robot_pose, action_delta,
-             grid_size=None, diagonal_ok=False):
+def _move_by_vw(robot_pose, action_delta,
+                grid_size=None, diagonal_ok=False):
     """
     Given 2D robot pose (x, z, pitch, yaw), and an action,
     which is (forward, h_angle, v_angle)
@@ -105,13 +105,34 @@ def _move_by(robot_pose, action_delta,
     new_pitch = (pitch + v_angle) % 360.0
     return (new_rx, new_rz, new_yaw, new_pitch)
 
+def _move_by_vw2d(robot_pose, action_delta,
+                  grid_size=None, diagonal_ok=False):
+    """
+    robot_pose (x, z, yaw); yaw is in DEGREES.
+    action_delta (forward, angle)
+    """
+    rx, rz, rth = robot_pose
+    forward, angle = action_delta
+    new_rth = rth + angle  # angle (radian)
+    new_rx = rx + forward*math.sin(to_radians(new_rth))
+    new_rz = rz + forward*math.cos(to_radians(new_rth))
+    if grid_size is not None:
+        if diagonal_ok:
+            new_rx = roundany(new_rx, grid_size)
+            new_rz = roundany(new_rz, grid_size)
+        else:
+            new_rx = floorany(new_rx, grid_size)
+            new_rz = floorany(new_rz, grid_size)
+    new_rth = new_rth % 360.0
+    return (new_rx, new_rz, new_rth)
+
 def transform_pose(robot_pose, action, schema="vw",
                    diagonal_ok=False, grid_size=None):
     """Transform pose of robot in 2D;
     This is a generic function, not specific to Thor.
 
     Args:
-       robot_pose (tuple): Either 2d pose (x,y,yaw,pitch).
+       robot_pose (tuple): Either 2d pose (x,y,yaw,pitch), or (x,y,yaw).
               or a tuple (position, rotation):
                   position (tuple): tuple (x, y, z)
                   rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
@@ -126,10 +147,18 @@ def transform_pose(robot_pose, action, schema="vw",
 
     Returns the transformed pose in the same form as input
     """
-    x, z, pitch, yaw = _simplify_pose(robot_pose)
     action_name, delta = action
-    new_pose = _move_by((x, z, pitch, yaw), delta,
-                        grid_size=grid_size, diagonal_ok=diagonal_ok)
+    if schema == "vw":
+        x, z, pitch, yaw = _simplify_pose(robot_pose)
+        new_pose = _move_by_vw((x, z, pitch, yaw), delta,
+                               grid_size=grid_size, diagonal_ok=diagonal_ok)
+    elif schema == "vw2d":
+        x, z, yaw = robot_pose
+        new_pose = _move_by_vw2d((x, z, yaw), delta,
+                                 grid_size=grid_size, diagonal_ok=diagonal_ok)
+    else:
+        raise ValueError("Unknown schema")
+
     if _is_full_pose(robot_pose):
         new_rx, new_rz, new_yaw, new_pitch = new_pose
         return (new_rx, robot_pose[0][1], new_rz),\
