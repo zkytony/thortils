@@ -44,6 +44,8 @@ def roundany(x, base):
     """
     return base * round(x / base)
 
+def floorany(x, base):
+    return base * math.floor(x / base)
 
 ########## Python utils
 def nice_timestr(dtobj=None):

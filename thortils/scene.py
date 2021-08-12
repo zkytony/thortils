@@ -71,8 +71,8 @@ def convert_scene_to_grid_map(controller_or_reachable_positions,
         x, z = thor_reachable_positions(controller, by_axes=True)
     else:
         reachable_positions = controller_or_reachable_positions
-        if type(reachable_positions) == list:
-            x, z = map(list, zip(*reachable_positions))
+        if type(reachable_positions) == list or type(reachable_positions) == set:
+            x, z = map(np.array, zip(*reachable_positions))
         elif type(reachable_positions) == tuple and len(reachable_positions) == 2:
             x, z = reachable_positions
         else:

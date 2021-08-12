@@ -1,5 +1,6 @@
 """
-Navigation in ai2thor
+Navigation in ai2thor; pose transform is generic, but pose
+convention follows ai2thor as below.
 
 See project README; Poses in ai2thor:
 
@@ -25,7 +26,7 @@ import matplotlib.pyplot as plt
 import time
 from collections import deque
 from .utils import (PriorityQueue, euclidean_dist,
-                    to_radians, normalize_angles, roundany,
+                    to_radians, normalize_angles, roundany, floorany,
                     closest, to_degrees)
 from .constants import (MOVEMENTS, MOVEMENT_PARAMS,
                         H_ANGLES, V_ANGLES,
@@ -93,16 +94,21 @@ def _move_by(robot_pose, action_delta,
     new_yaw = yaw + h_angle  # angle (degrees)
     new_rx = rx + forward*math.sin(to_radians(new_yaw))
     new_rz = rz + forward*math.cos(to_radians(new_yaw))
-    if diagonal_ok:
-        new_rx = roundany(new_rx, grid_size)
-        new_rz = roundany(new_rz, grid_size)
+    if grid_size is not None:
+        if diagonal_ok:
+            new_rx = roundany(new_rx, grid_size)
+            new_rz = roundany(new_rz, grid_size)
+        else:
+            new_rx = floorany(new_rx, grid_size)
+            new_rz = floorany(new_rz, grid_size)
     new_yaw = new_yaw % 360.0
     new_pitch = (pitch + v_angle) % 360.0
     return (new_rx, new_rz, new_yaw, new_pitch)
 
 def transform_pose(robot_pose, action, schema="vw",
                    diagonal_ok=False, grid_size=None):
-    """Transform pose of robot in 2D
+    """Transform pose of robot in 2D;
+    This is a generic function, not specific to Thor.
 
     Args:
        robot_pose (tuple): Either 2d pose (x,y,yaw,pitch).
@@ -111,6 +117,12 @@ def transform_pose(robot_pose, action, schema="vw",
                   rotation (tuple): tuple (x, y, z); pitch, yaw, roll.
        action:
               ("ActionName", delta), where delta is the change, format dependent on schema
+
+       grid_size (float or None): If None, then will not
+           snap the transformed x,y to grid.
+
+       diagonal_ok (bool): True if it is ok to go diagonally,
+           even though the traversed distance is longer than grid_size.
 
     Returns the transformed pose in the same form as input
     """
