@@ -59,24 +59,23 @@ def thor_agent_position(event_or_controller, as_tuple=False):
     else:
         return position
 
-def thor_apply_pose(controller, pose):
+def thor_teleport2d(controller, pose):
     """Given a 2d pose (x,y,th), teleport the agent to that pose"""
     pos, rot = thor_agent_pose(controller)
     x, z, th = pose
-    # if th != 0.0:
-    #     import pdb; pdb.set_trace()
-    controller.step("TeleportFull",
-                    x=x, y=pos["y"], z=z,
-                    rotation=dict(y=th))
-    controller.step(action="Pass")  #https://github.com/allenai/ai2thor/issues/538
+    thor_teleport(controller,
+                  dict(x=x, y=pos["y"], z=z),
+                  dict(x=rot['x'], y=th, z=rot['z']),
+                  horizon=thor_camera_horizon(controller))
 
 def thor_teleport(controller, position, rotation, horizon):
     """Calls the Teleport function with relevant parameters."""
-    return controller.step(action="Teleport",
+    controller.step(action="Teleport",
                            position=position,
                            rotation=rotation,
                            horizon=horizon,
                            standing=True)  # we don't deal with this
+    return controller.step(action="Pass")
 
 
 def thor_camera_pose(event_or_controller, get_tuples=False):
