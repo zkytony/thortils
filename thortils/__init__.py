@@ -22,10 +22,10 @@ from .object import (thor_object_with_id,
 from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
-                    thor_apply_pose,
                     thor_camera_horizon,
                     thor_place_agent_randomly,
                     thor_teleport,
+                    thor_teleport2d,
                     thor_pose_as_tuple,
                     thor_pose_as_dict)
 from .interactions import (OpenObject,
@@ -44,3 +44,5 @@ from .scene import (robothor_scene_names, ithor_scene_names,
                     convert_scene_to_grid_map)
 
 from .navigation import compute_spl, spl_ratio
+
+from .grid_map import GridMap

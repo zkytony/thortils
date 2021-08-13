@@ -49,10 +49,34 @@ class GridMap:
         self._geodesic_dist_cache = {}
         self._blocked_cache = {}
 
+    @staticmethod
+    def to_grid_yaw(thor_yaw):
+        """
+        Transform theta (degrees) from ai2thor coordinate system to gridmap coordinate system.
+        In thor, 0 degree is +z, clockwise rotation.
+        In grid map, 0 degree is +x, counterclockwise rotation;"""
+        return 90 - thor_yaw
+
+    @staticmethod
+    def to_thor_yaw(grid_yaw):
+        return 90 - grid_yaw
+
+    @staticmethod
+    def to_grid_dyaw(thor_dyaw):
+        """
+        Transform CHANGE in theta (DEGREES) from ai2thor coordinate system to gridmap coordinate system.
+        ai2thor: clockwise; gridmap: counterclockwise
+        """
+        return -thor_dyaw
+
+    @staticmethod
+    def to_thor_dyaw(grid_dyaw):
+        return -grid_dyaw
+
     def to_thor_pose(self, x, y, th):
-        """Given a point (x, y) in the grid map and th (radians),
+        """Given a point (x, y) in the grid map and th (degrees),
         convert it to a tuple (thor_x, thor_y, degrees_th)"""
-        return (*self.to_thor_pos(x, y), to_degrees(th))
+        return (*self.to_thor_pos(x, y), self.to_thor_yaw(th))
 
     def to_thor_pos(self, x, y):
         """
@@ -72,6 +96,9 @@ class GridMap:
                     self.grid_size * round((thor_gy * self.grid_size) / self.grid_size))
         else:
             return (thor_gx, thor_gy)
+
+    def to_grid_pose(self, thor_x, thor_z, thor_th, avoid_obstacle=False):
+        return (*self.to_grid_pos(thor_x, thor_z), self.to_grid_yaw(thor_th))
 
     def to_grid_pos(self, thor_x, thor_z, avoid_obstacle=False):
         """
