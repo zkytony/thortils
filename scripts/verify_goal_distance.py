@@ -11,7 +11,7 @@ def main():
     parser.add_argument("-s", "--scene", type=str, help="scene",
                         default="FloorPlan1")
     parser.add_argument("-t", "--target-class", type=str, default="PepperShaker")
-    parser.add_argument("-g", "--goal-dist", type=int, default=1.0)
+    parser.add_argument("-g", "--goal-dist", type=float, default=1.0)
     args = parser.parse_args()
 
     controller = thortils.launch_controller({**CONFIG, **{'scene':args.scene}})
