@@ -113,7 +113,7 @@ def _move_by_vw2d(robot_pose, action_delta,
     """
     rx, rz, rth = robot_pose
     forward, angle = action_delta
-    new_rth = rth + angle  # angle (radian)
+    new_rth = rth + angle
     new_rx = rx + forward*math.sin(to_radians(new_rth))
     new_rz = rz + forward*math.cos(to_radians(new_rth))
     if grid_size is not None:
