@@ -24,12 +24,15 @@ def thor_object_with_id(event_or_controller, object_id):
         obj = list(filter(lambda obj: obj["objectId"] == object_id, thor_objects))[0]
         return obj
     except IndexError as ex:
-        print("Object {} does not exist.".format(object_id))
-        raise ex
+        # Object does not exist
+        return None
 
 def thor_object_pose(event_or_controller, object_id, as_tuple=False):
     """For objects, pose == position"""
     obj = thor_object_with_id(event_or_controller, object_id)
+    if obj is None:
+        # Unknown because object_id is not valid.
+        return None
     p = obj["position"]
     if as_tuple:
         return (p["x"], p["y"], p["z"])
