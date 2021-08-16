@@ -1,4 +1,4 @@
-from .controller import _resolve, thor_get
+from ..controller import _resolve, thor_get
 
 def thor_img(event_or_controller):
     event = _resolve(event_or_controller)
