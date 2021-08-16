@@ -108,3 +108,36 @@ The following enters debugger with an event object to play with
 python -m thortils.controller --debug
 python -m thortils.controller FloorPlan2 --debug
 ```
+
+
+### Keyboard control
+In `scripts/` there is a utility program that starts a controller,
+and allows you to control the agent with keyboard to navigate around.
+
+```
+python scripts/kbcontrol.py
+```
+
+Example output:
+```
+            w
+        (MoveAhead)
+
+    a                 d
+(RotateLeft)     (RotateRight)
+
+    e
+(LookUp)
+
+    c
+(LookDown)
+
+    q
+(quit)
+
+w | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 270.0, 0.0))
+w | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 270.0, 0.0))
+a | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 225.0, 0.0))
+d | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 270.0, 0.0))
+a | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 225.0, 0.0))
+```
