@@ -12,7 +12,7 @@ def _reachable_thor_loc2d(controller):
         `set(zip(x, z))`
     """
     # get reachable positions
-    event = controller.step(action="GetReachablePositions")
+    event = controller.step(dict(action="GetReachablePositions"))
     positions = event.metadata["actionReturn"]
     x = np.array([p['x'] for p in positions])
     y = np.array([p['y'] for p in positions])
@@ -70,12 +70,12 @@ def thor_teleport2d(controller, pose):
 
 def thor_teleport(controller, position, rotation, horizon):
     """Calls the Teleport function with relevant parameters."""
-    controller.step(action="Teleport",
-                           position=position,
-                           rotation=rotation,
-                           horizon=horizon,
-                           standing=True)  # we don't deal with this
-    return controller.step(action="Pass")
+    controller.step(dict(action="Teleport",
+                         position=position,
+                         rotation=rotation,
+                         horizon=horizon,
+                         standing=True))  # we don't deal with this
+    return controller.step(dict(action="Pass"))
 
 
 def thor_camera_pose(event_or_controller, get_tuples=False):

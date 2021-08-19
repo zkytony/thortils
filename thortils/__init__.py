@@ -3,7 +3,8 @@ from .controller import (_resolve,
                          thor_get,
                          launch_controller,
                          thor_scene_from_controller,
-                         thor_grid_size_from_controller)
+                         thor_grid_size_from_controller,
+                         thor_pass)
 from .object import (thor_all_object_types,
                      thor_object_with_id,
                      thor_object_type,
