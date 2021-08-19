@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Please make sure this is correct.
-AI2THOR_VERSION = '3.3.4'
+AI2THOR_VERSION = '1.0.1'
 
 from setuptools import setup, find_packages
 
