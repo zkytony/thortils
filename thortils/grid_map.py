@@ -98,7 +98,8 @@ class GridMap:
             return (thor_gx, thor_gy)
 
     def to_grid_pose(self, thor_x, thor_z, thor_th, avoid_obstacle=False):
-        return (*self.to_grid_pos(thor_x, thor_z), self.to_grid_yaw(thor_th))
+        return (*self.to_grid_pos(thor_x, thor_z, avoid_obstacle=avoid_obstacle),
+                self.to_grid_yaw(thor_th))
 
     def to_grid_pos(self, thor_x, thor_z, avoid_obstacle=False):
         """

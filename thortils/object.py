@@ -13,9 +13,18 @@ from .controller import thor_get, _resolve
 from .agent import thor_agent_pose, thor_agent_position
 from .utils import euclidean_dist
 
+import re
+
 def thor_object_type(object_id):
     """By convention, thor object id are <object_type>|.|.|."""
-    return object_id.split("|")[0]
+    # I notice that sometimes you'll get e.g. ButterKnife1
+    return re.match("[A-Za-z]+", object_id.split("|")[0]).group()
+
+def thor_all_object_types(event_or_controller):
+    """Returns a set of all object types in the given event or controller"""
+    event = _resolve(event_or_controller)
+    thor_objects = thor_get(event, "objects")
+    return set(obj['objectType'] for obj in thor_objects)
 
 def thor_object_with_id(event_or_controller, object_id):
     event = _resolve(event_or_controller)
@@ -203,6 +212,11 @@ def thor_closest_object_of_type(event_or_controller, object_type):
     properties = {"objectType": object_type}
     return thor_closest_object_with_properties(event_or_controller,
                                                properties)
+
+def thor_closest_object_of_type_position(event_or_controller, object_type, as_tuple=False):
+    event = _resolve(event_or_controller)
+    obj = thor_closest_object_of_type(event, object_type)
+    return thor_object_position(event, obj["objectId"], as_tuple=as_tuple)
 
 
 def position_dist(

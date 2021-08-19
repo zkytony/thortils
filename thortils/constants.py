@@ -112,11 +112,15 @@ INTERACTIONS = ["PickupObject",
                 "CloseObject"]
 
 # Defines navigation actions, with parameters
-MOVEMENT_PARAMS = {"MoveAhead"  :  {"moveMagnitude": MOVE_STEP_SIZE},
-                   "LookUp"     :  {"degrees": V_ROTATION},
-                   "LookDown"   :  {"degrees": V_ROTATION},
-                   "RotateLeft" :  {"degrees": H_ROTATION},
-                   "RotateRight":  {"degrees": H_ROTATION}}
+def get_movement_params(step_size, v_rot, h_rot):
+    return {"MoveAhead"  :  {"moveMagnitude": step_size},
+            "LookUp"     :  {"degrees": v_rot},
+            "LookDown"   :  {"degrees": v_rot},
+            "RotateLeft" :  {"degrees": h_rot},
+            "RotateRight":  {"degrees": h_rot}}
+MOVEMENT_PARAMS = get_movement_params(MOVE_STEP_SIZE,
+                                      V_ROTATION,
+                                      H_ROTATION)
 MOVEMENTS = list(MOVEMENT_PARAMS.keys())
 
 def get_acceptable_thor_actions():
@@ -285,6 +289,8 @@ def _load_config():
     config = {}
     for k, v in globals().items():
         if k.startswith("__"):
+            continue
+        if k == "CONFIG":
             continue
         if callable(eval(k)):
             continue
