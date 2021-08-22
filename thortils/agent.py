@@ -104,7 +104,8 @@ def thor_camera_horizon(event_or_controller):
 
 def thor_place_agent_randomly(controller,
                               v_angles=V_ANGLES,
-                              h_angles=H_ANGLES):
+                              h_angles=H_ANGLES,
+                              rnd=random):
     """Place the agent randomly in an environment;
     Both the position and rotation will be random,
     but valid.
@@ -115,9 +116,9 @@ def thor_place_agent_randomly(controller,
        h_angles (list): List of valid yaw (rotation) angles"""
     reachable_positions = thor_reachable_positions(controller)
     agent_pose = thor_agent_pose(controller.last_event, as_tuple=False)
-    pos = random.sample(reachable_positions, 1)[0]
-    pitch = random.sample(v_angles, 1)[0]
-    yaw = random.sample(h_angles, 1)[0]
+    pos = rnd.sample(reachable_positions, 1)[0]
+    pitch = rnd.sample(v_angles, 1)[0]
+    yaw = rnd.sample(h_angles, 1)[0]
     return controller.step(action="Teleport",
                            position=dict(x=pos[0], y=agent_pose[0]['y'], z=pos[1]),
                            rotation=dict(x=agent_pose[1]['x'], y=yaw, z=agent_pose[1]['z']),
