@@ -136,8 +136,8 @@ def pcd_from_rgbd(color, depth,
     einv = extrinsic_inv(camera_pose)
     points = []
     colors = []
+
     # The procedure is simlar to open3d_pcd_from_rgbd
-    # First, get points projected to camera frame
     for v in range(color.shape[0]):
         for u in range(color.shape[1]):
             if random.uniform(0,1) < (1. - downsample):  # downsample
