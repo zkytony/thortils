@@ -16,5 +16,6 @@ setup(name='thortils',
           'ai2thor=={}'.format(AI2THOR_VERSION),
           'open3d==0.13.0'
       ],
+      license='MIT',
       author='Kaiyu Zheng',
       author_email='kaiyutony@gmail.com')
