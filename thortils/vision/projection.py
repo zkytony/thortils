@@ -44,7 +44,7 @@ def extrinsic_inv(camera_pose):
     pitch, yaw, roll = rot
     Rmat = R_euler(pitch, yaw, roll, affine=True)
     Rinv_mat = np.linalg.inv(Rmat)  # rotate 'back'
-    Tmat = T(-x, -y, -z)  # translate 'back'
+    Tmat = T(x, -y, -z)  # translate 'back'; **No idea why it's x not -x; -x causes shift**
     return np.dot(Tmat, Rinv_mat)  # first rotate, then translate
 
 def pinhole_intrinsic(fov, width, height):

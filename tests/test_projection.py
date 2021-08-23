@@ -63,7 +63,7 @@ def test_inverse_project_with_extrinsics(controller):
 
     points = []
     colors = []
-    for action in ["Pass", "RotateLeft"]:#, "RotateLeft"]:#, "RotateRight", "MoveAhead"]:
+    for action in ["Pass", "RotateLeft", "RotateLeft", "RotateRight", "MoveAhead"]:
         print(action)
         p, c = pcd_after(controller, action, intrinsic, downsample=0.5)
         points.extend(p)

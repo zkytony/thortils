@@ -13,6 +13,7 @@ import open3d as o3d
 from kbcontrol import print_controls
 
 def do_step(controller, action, intrinsic, viz):
+    print(action)
     controller.step(action=action)
     event = controller.step(action="Pass")
     camera_pose = thor_camera_pose(event, as_tuple=True)
@@ -44,8 +45,15 @@ def main_open3d():
 
     do_step(controller, "Pass", intrinsic, viz)
     do_step(controller, "RotateLeft", intrinsic, viz)
+    do_step(controller, "MoveAhead", intrinsic, viz)
+    do_step(controller, "RotateRight", intrinsic, viz)
+    do_step(controller, "RotateRight", intrinsic, viz)
+    do_step(controller, "MoveAhead", intrinsic, viz)
     do_step(controller, "RotateLeft", intrinsic, viz)
     do_step(controller, "RotateLeft", intrinsic, viz)
+    do_step(controller, "RotateLeft", intrinsic, viz)
+    do_step(controller, "MoveAhead", intrinsic, viz)
+    do_step(controller, "MoveBack", intrinsic, viz)
 
     opt = viz.get_render_option()
     opt.show_coordinate_frame = True
