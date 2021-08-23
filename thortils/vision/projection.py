@@ -1,3 +1,4 @@
+import random
 import math
 import numpy as np
 from thortils.utils import to_rad, R_euler, R_quat, T
@@ -55,21 +56,28 @@ def pinhole_intrinsic(fov, width, height):
                       height/2)
     return width, height, fx, fy, cx, cy
 
-def inverse_projection(u, v, d, intrinsic, extrinsic_inv=None):
+def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
     """
     Converts image coordinate (u,v) and depth d to x,y,z location in the world,
     given camera intrinsic (fx, fy, cx, cy); Can optionally specify
     extrinsic_inv, a 4x4 matrix, if want to project back to world frame.
+
+    camera_pose_or_extrinsic_inv can either be a camera_pose or a
+    matrix that is the result of extrinsic_inv()
     """
-    fx, fy, cx, cy = intrinsic
+    _, _, fx, fy, cx, cy = intrinsic
     x_c = (u - cx) * d / fx
-    y_c = (v - cy) * d / fy
+    y_c = (v - cy) * d / fy  # this is becasue image y axis and ai2thor's y axis are reversed
     z_c = d
 
-    if extrinsic_inv is not None:
+    if camera_pose_or_extrinsic_inv is not None:
+        if type(camera_pose_or_extrinsic_inv) == tuple:
+            camera_pose = camera_pose_or_extrinsic_inv
+            e_inv = extrinsic_inv(camera_pose)
+        else:
+            e_inv = camera_pose_or_extrinsic_inv
         x_w, y_w, z_w, _ =\
-            np.matmul(extrinsic_inv,
-                      np.asarray([x_c, y_c, z_c, 1]).transpose())
+            np.dot(e_inv, np.asarray([x_c, y_c, z_c, 1]).transpose())
         return (x_w, y_w, z_w)
     else:
         return (x_c, y_c, z_c)
@@ -117,3 +125,36 @@ def open3d_pcd_from_rgbd(color, depth,
     # to do the pcd.transform in the last step.)
     pcd.transform(extrinsic_inv(camera_pose))
     return pcd
+
+def pcd_from_rgbd(color, depth,
+                  intrinsic,
+                  camera_pose=None,
+                  depth_scale=1.0,
+                  truncate=7,
+                  downsample=0.2):
+    einv = extrinsic_inv(camera_pose)
+    points = []
+    points_noop = []
+    colors = []
+    # The procedure is simlar to open3d_pcd_from_rgbd
+    # First, get points projected to camera frame
+    for v in range(color.shape[0]):
+        for u in range(color.shape[1]):
+            if random.uniform(0,1) < (1. - downsample):  # downsample
+                d = depth[v,u] / depth_scale
+                if d <  0 or d > truncate:
+                    continue  # truncate
+                point = inverse_projection(u, v, d, intrinsic)
+                x, y, z = point
+                point = np.dot(einv, np.array([x,-y,-z,1]).transpose())
+                points.append(point)
+                points_noop.append([x,y,z,1])
+                colors.append(color[v,u] / 255.)
+    np.save('individually.npy', points)
+    np.save('noop.npy', points_noop)
+    np.save('einv.npy', einv)
+    np.save('tf.npy', np.array([[1., 0., 0., 0.],
+                                [0., -1., 0., 0.],
+                                [0., 0., -1., 0.],
+                                [0., 0., 0., 1.]]))
+    return np.asarray(points)[:,:3], np.asarray(colors)
