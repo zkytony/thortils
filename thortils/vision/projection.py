@@ -134,7 +134,6 @@ def pcd_from_rgbd(color, depth,
                   downsample=0.2):
     einv = extrinsic_inv(camera_pose)
     points = []
-    points_noop = []
     colors = []
     # The procedure is simlar to open3d_pcd_from_rgbd
     # First, get points projected to camera frame
@@ -145,16 +144,13 @@ def pcd_from_rgbd(color, depth,
                 if d <  0 or d > truncate:
                     continue  # truncate
                 point = inverse_projection(u, v, d, intrinsic)
-                x, y, z = point
-                point = np.dot(einv, np.array([x,-y,-z,1]).transpose())
-                points.append(point)
-                points_noop.append([x,y,z,1])
+                points.append([*point, 1])
                 colors.append(color[v,u] / 255.)
-    np.save('individually.npy', points)
-    np.save('noop.npy', points_noop)
-    np.save('einv.npy', einv)
-    np.save('tf.npy', np.array([[1., 0., 0., 0.],
-                                [0., -1., 0., 0.],
-                                [0., 0., -1., 0.],
-                                [0., 0., 0., 1.]]))
+    # same transformation as in open3d
+    points = np.dot(points, [[1, 0, 0, 0.],
+                             [0, -1, 0, 0.],
+                             [0, 0, -1, 0.],
+                             [0, 0, 0, 1.]])
+    # transform by inverse extrinsic
+    points = np.dot(einv, points.transpose()).transpose()
     return np.asarray(points)[:,:3], np.asarray(colors)
