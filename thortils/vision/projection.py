@@ -67,8 +67,9 @@ def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
     """
     _, _, fx, fy, cx, cy = intrinsic
     x_c = (u - cx) * d / fx
-    y_c = (v - cy) * d / fy  # this is becasue image y axis and ai2thor's y axis are reversed
-    z_c = d
+    y_c = -(v - cy) * d / fy  # this is becasue image y axis and ai2thor's y axis are reversed
+    z_c = -d   # the image plane is behind the camera aperture, but the camera looks at +z in ai2thor;
+               # so depth is mirrored to make z
 
     if camera_pose_or_extrinsic_inv is not None:
         if type(camera_pose_or_extrinsic_inv) == tuple:
@@ -143,14 +144,7 @@ def pcd_from_rgbd(color, depth,
                 d = depth[v,u] / depth_scale
                 if d <  0 or d > truncate:
                     continue  # truncate
-                point = inverse_projection(u, v, d, intrinsic)
-                points.append([*point, 1])
+                point = inverse_projection(u, v, d, intrinsic, einv)
+                points.append(point)
                 colors.append(color[v,u] / 255.)
-    # same transformation as in open3d
-    points = np.dot(points, [[1, 0, 0, 0.],
-                             [0, -1, 0, 0.],
-                             [0, 0, -1, 0.],
-                             [0, 0, 0, 1.]])
-    # transform by inverse extrinsic
-    points = np.dot(einv, points.transpose()).transpose()
-    return np.asarray(points)[:,:3], np.asarray(colors)
+    return points, colors

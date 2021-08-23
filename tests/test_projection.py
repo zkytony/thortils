@@ -66,8 +66,8 @@ def test_inverse_project_with_extrinsics(controller):
     for action in ["Pass", "RotateLeft"]:#, "RotateLeft"]:#, "RotateRight", "MoveAhead"]:
         print(action)
         p, c = pcd_after(controller, action, intrinsic, downsample=0.5)
-        points.extend(p.tolist())
-        colors.extend(c.tolist())
+        points.extend(p)
+        colors.extend(c)
 
     print("Making point cloud...")
     pcd = o3d.geometry.PointCloud()
