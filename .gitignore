@@ -131,3 +131,10 @@ Thumbs.db
 ############################################3
 scenes/
 scene_scatter_plots/
+
+DepthCamera*.json
+DepthCapture*.png
+RenderOption*.json
+ScreenCapture*.json
+ScreenCapture*.png
+ScreenCamera*.json

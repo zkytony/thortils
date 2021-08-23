@@ -4,6 +4,7 @@ import thortils
 import thortils.constants as constants
 from thortils.utils import getch
 import argparse
+import time
 
 def print_controls(controls):
     reverse = {controls[k]:k for k in controls}
