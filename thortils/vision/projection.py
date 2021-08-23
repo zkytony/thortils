@@ -46,14 +46,14 @@ def extrinsic_inv(camera_pose):
     Tmat = T(-x, -y, -z)  # translate 'back'
     return np.dot(Tmat, Rinv_mat)  # first rotate, then translate
 
-def intrinsic(fov, width, height):
+def pinhole_intrinsic(fov, width, height):
     """This intrinsic matrix works based on open3d visualization"""
     focal_length = 0.5 * width * math.tan(to_rad(fov/2))
-    fx, fy, cx, cy = (focal_length/2,
-                      focal_length/2,
+    fx, fy, cx, cy = (focal_length,
+                      focal_length,
                       width/2,
                       height/2)
-    return fx, fy, cx, cy
+    return width, height, fx, fy, cx, cy
 
 def inverse_projection(u, v, d, intrinsic, extrinsic_inv=None):
     """
@@ -74,19 +74,46 @@ def inverse_projection(u, v, d, intrinsic, extrinsic_inv=None):
     else:
         return (x_c, y_c, z_c)
 
-def pcd_from_rgbd_open3d(color, depth, width, height, fx, fy, cx, cy):
+def open3d_pcd_from_rgbd(color, depth,
+                         intrinsic, camera_pose=None,
+                         depth_scale=1.0,
+                         depth_trunc=7,
+                         convert_rgb_to_intensity=False):
     """
     color (np.array): rgb image
     depth (np.array): depth image
-    width, height, fx, fy, cx, cy: parameters of camera intrinsic
+    intrinsic: a tuple width, length, fx, fy, cx, cy
+    camera_pose: a tuple (position, rotation) of the camera in world frame;
+        position and rotation are tuples too.
+    depth_scale: depth will be scaled by 1.0 / depth_scale
+    depth_trunc: points with depth greater than depth_trunc will be discarded
     """
-    depth = depth / np.max(depth)
+    width, height, fx, fy, cx, cy = intrinsic
     depth_img = o3d.geometry.Image(depth)
     color_img = o3d.geometry.Image(color.astype(np.uint8))
     intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+
+    rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+        color_img,
+        depth_img,
+        depth_scale=depth_scale,
+        depth_trunc=depth_trunc,
+        convert_rgb_to_intensity=convert_rgb_to_intensity)
+
+    # Get points in camera frame; Note that open3d works with different
+    # coordinate conventions w.r.t. ai2thor.
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intrinsic)
+
+    # Therefore we must transform in order for the point cloud to be displayed according to
+    # the coordinate system conventions in ai2thor (i.e. y is up).
     pcd.transform([[1, 0, 0, 0],
                    [0, -1, 0, 0],
                    [0, 0, -1, 0],
                    [0, 0, 0, 1]])
+
+    # After the coordinate system matches ai2thor's convention, we then do
+    # the transform to the world frame; Here extrinsic_inv is a matrix
+    # that assumes ai2thor's coordinate system convention (therefore we had
+    # to do the pcd.transform in the last step.)
+    pcd.transform(extrinsic_inv(camera_pose))
     return pcd
