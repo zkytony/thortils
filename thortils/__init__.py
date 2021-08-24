@@ -50,3 +50,10 @@ from .scene import (robothor_scene_names, ithor_scene_names,
 from .navigation import compute_spl, spl_ratio
 
 from .grid_map import GridMap
+
+def ai2thor_version():
+    import os
+    abs_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(abs_path, "../AI2THOR_VERSION")) as f:
+        version = f.readlines()[0].strip()
+    return version

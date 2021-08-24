@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-# Please make sure this is correct.
-AI2THOR_VERSION = '3.3.4'
-
 from setuptools import setup, find_packages
+import os
+ABS_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(ABS_PATH, "AI2THOR_VERSION")) as f:
+    AI2THOR_VERSION = f.readlines()[0].strip()
 
 setup(name='thortils',
       packages=find_packages(),
