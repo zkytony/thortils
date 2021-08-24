@@ -4,6 +4,7 @@ import numpy as np
 import open3d as o3d
 from tqdm import tqdm
 from thortils.utils import to_rad, R_euler, T, clip
+from thortils.controller import thor_controller_param
 
 def extrinsic(camera_pose):
     """
@@ -59,6 +60,13 @@ def pinhole_intrinsic(fov, width, height):
                       width/2,
                       height/2)
     return width, height, fx, fy, cx, cy
+
+def thor_camera_intrinsic(controller):
+    fov = thor_controller_param(controller, "fieldOfView")
+    width = thor_controller_param(controller, "width")
+    height = thor_controller_param(controller, "height")
+    intrinsic = pinhole_intrinsic(fov, width, height)
+    return intrinsic
 
 def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
     """
@@ -194,6 +202,12 @@ def pcd_from_rgbd(color, depth,
             colors.append(color[v,u])
     return points, colors
 
+def pcd_from_depth(depth,
+                   intrinsic,
+                   **params):
+    fake_colors = np.zeros((*depth.shape, 3))
+    points, _ = pcd_from_rgbd(fake_colors, depth, intrinsic, **params)
+    return points
 
 def rgbd_from_pcd(points, colors,
                   intrinsic, camera_pose=None,
