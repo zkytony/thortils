@@ -9,7 +9,7 @@ import sys
 import os
 ABS_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# just so we can import mjolnir stuff
+# just so we can import methods from tests/
 sys.path.append(os.path.join(ABS_PATH, '../tests'))
 from tests.test_projection import test_inverse_project_multiple_open3d
 
