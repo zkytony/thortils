@@ -89,8 +89,9 @@ _conversions_ = ['to_radians',
                  'cart2pol',
                  'pol2cart']
 
-########## Transform
+########## Transform; all input angles are degrees
 def R_x(th):
+    th = to_rad(th)
     return np.array([
         1, 0, 0, 0,
         0, np.cos(th), -np.sin(th), 0,
@@ -99,6 +100,7 @@ def R_x(th):
     ]).reshape(4,4)
 
 def R_y(th):
+    th = to_rad(th)
     return np.array([
         np.cos(th), 0, np.sin(th), 0,
         0, 1, 0, 0,
@@ -107,6 +109,7 @@ def R_y(th):
     ]).reshape(4,4)
 
 def R_z(th):
+    th = to_rad(th)
     return np.array([
         np.cos(th), -np.sin(th), 0, 0,
         np.sin(th), np.cos(th), 0, 0,
@@ -115,6 +118,7 @@ def R_z(th):
     ]).reshape(4,4)
 
 def R2d(th):
+    th = to_rad(th)
     return np.array([
         np.cos(th), -np.sin(th),
         np.sin(th), np.cos(th)
@@ -136,31 +140,11 @@ def R_between(v1, v2):
     R = I + vX + np.matmul(vX,vX) * ((1-c)/(s**2))
     return R
 
-def R_euler(thx, thy, thz, affine=False):
+def R_euler(thx, thy, thz, affine=False, order='xyz'):
     """
     Obtain the rotation matrix of Rz(thx) * Ry(thy) * Rx(thz); euler angles
     """
-    R = scipyR.from_euler("xyz", [thx, thy, thz], degrees=True)
-    if affine:
-        aR = np.zeros((4,4), dtype=float)
-        aR[:3,:3] = R.as_matrix()
-        aR[3,3] = 1
-        R = aR
-    return R
-
-def R_quat(x, y, z, w, affine=False):
-    R = scipyR.from_quat([x,y,z,w])
-    if affine:
-        aR = np.zeros((4,4), dtype=float)
-        aR[:3,:3] = R.as_matrix()
-        aR[3,3] = 1
-        R = aR
-    return R
-def R_euler(thx, thy, thz, affine=False):
-    """
-    Obtain the rotation matrix of Rz(thx) * Ry(thy) * Rx(thz); euler angles
-    """
-    R = scipyR.from_euler("xyz", [thx, thy, thz], degrees=True)
+    R = scipyR.from_euler(order, [thx, thy, thz], degrees=True)
     if affine:
         aR = np.zeros((4,4), dtype=float)
         aR[:3,:3] = R.as_matrix()
@@ -177,21 +161,21 @@ def R_quat(x, y, z, w, affine=False):
         R = aR
     return R
 
-def R_to_euler(R):
+def R_to_euler(R, order='xyz'):
     """
     Obtain the thx,thy,thz angles that result in the rotation matrix Rz(thx) * Ry(thy) * Rx(thz)
     Reference: http://planning.cs.uiuc.edu/node103.html
     """
-    return R.as_euler('xyz', degrees=True)
+    return R.as_euler(order, degrees=True)
 
 def R_to_quat(R):
     return R.as_quat()
 
-def euler_to_quat(thx, thy, thz):
-    return scipyR.from_euler("xyz", [thx, thy, thz], degrees=True).as_quat()
+def euler_to_quat(thx, thy, thz, order='xyz'):
+    return scipyR.from_euler(order, [thx, thy, thz], degrees=True).as_quat()
 
-def quat_to_euler(x, y, z, w):
-    return scipyR.from_quat([x,y,z,w]).as_euler("xyz", degrees=True)
+def quat_to_euler(x, y, z, w, order='xyz'):
+    return scipyR.from_quat([x,y,z,w]).as_euler(order, degrees=True)
 
 def T(dx, dy, dz):
     return np.array([

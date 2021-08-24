@@ -12,6 +12,31 @@ import random
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
+def test_inverse_project_open3d(controller):
+    # Testing our method to use open3d to get point cloud
+    print("""test_inverse_project_open3d This function will show a point cloud
+          visualization that is the result of a point cloud obtained from. The
+          RGBD->point cloud is performed using open3d's internal method""")
+
+    # Obtain camera intrinsics (virtual camera, so can estimate intrinsics from fov).
+    fov = thor_controller_param(controller, "fieldOfView")
+    width = thor_controller_param(controller, "width")
+    height = thor_controller_param(controller, "height")
+    intrinsic = pj.pinhole_intrinsic(fov, width, height)
+
+    viz = o3d.visualization.Visualizer()
+    viz.create_window()
+
+    controller.step(action="RotateLeft")
+    event = controller.step(action="Pass")
+    camera_pose = thor_camera_pose(event, as_tuple=True)
+    pcd = pj.open3d_pcd_from_rgbd(event.frame, event.depth_frame, intrinsic)
+    viz.add_geometry(pcd)
+    opt = viz.get_render_option()
+    opt.show_coordinate_frame = True
+    viz.run()
+    viz.destroy_window()
+
 
 def test_inverse_project_multiple_open3d(controller):
     # Testing our method to use open3d to get point cloud
@@ -39,17 +64,20 @@ def test_inverse_project_multiple_open3d(controller):
     viz = o3d.visualization.Visualizer()
     viz.create_window()
 
-    do_step(controller, "Pass", intrinsic, viz)
-    do_step(controller, "RotateLeft", intrinsic, viz)
+    do_step(controller, "LookDown", intrinsic, viz)
+    do_step(controller, "LookDown", intrinsic, viz)
     do_step(controller, "MoveAhead", intrinsic, viz)
     do_step(controller, "RotateRight", intrinsic, viz)
-    do_step(controller, "RotateRight", intrinsic, viz)
-    do_step(controller, "MoveAhead", intrinsic, viz)
-    do_step(controller, "RotateLeft", intrinsic, viz)
-    do_step(controller, "RotateLeft", intrinsic, viz)
-    do_step(controller, "RotateLeft", intrinsic, viz)
-    do_step(controller, "MoveAhead", intrinsic, viz)
-    do_step(controller, "MoveBack", intrinsic, viz)
+    # do_step(controller, "LookUp", intrinsic, viz)
+    # do_step(controller, "MoveAhead", intrinsic, viz)
+    # do_step(controller, "RotateLeft", intrinsic, viz)
+    # do_step(controller, "LookDown", intrinsic, viz)
+    # do_step(controller, "LookDown", intrinsic, viz)
+    # do_step(controller, "MoveAhead", intrinsic, viz)
+    # do_step(controller, "MoveAhead", intrinsic, viz)
+    # do_step(controller, "RotateLeft", intrinsic, viz)
+    # do_step(controller, "MoveAhead", intrinsic, viz)
+    # do_step(controller, "MoveBack", intrinsic, viz)
 
     opt = viz.get_render_option()
     opt.show_coordinate_frame = True
@@ -125,7 +153,7 @@ def test_inverse_project_multiple(controller):
 
     points = []
     colors = []
-    for action in ["Pass", "RotateLeft", "RotateLeft", "RotateRight", "MoveAhead"]:
+    for action in ["RotateLeft", "MoveAhead", "LookUp", "RotateLeft", "LookDown", "LookDown", "RotateRight"]:
         print(action)
         p, c = pcd_after(controller, action, intrinsic, downsample=0.5)
         points.extend(p)
@@ -162,7 +190,7 @@ def test_project(controller):
     intrinsic = pj.pinhole_intrinsic(fov, width, height)
 
     controller.step(action="RotateLeft")
-    controller.step(action="RotateLeft")
+    controller.step(action="LookDown")
     event = controller.step(action="Pass")
     camera_pose = thor_camera_pose(event, as_tuple=True)
 
@@ -241,7 +269,7 @@ def test_project_multiple(controller):
 
     geom = []
     print("Making point cloud...")
-    for action in ["Pass", "RotateLeft", "RotateLeft", "RotateLeft", "RotateRight", "MoveAhead"]:
+    for action in ["Pass", "RotateLeft", "LookDown", "RotateLeft", "RotateRight", "MoveAhead"]:
         print(action)
         pcd = pcd_after(controller, action, intrinsic)
         geom.append(pcd)
@@ -261,6 +289,7 @@ def test_project_multiple(controller):
 
 if __name__ == "__main__":
     controller = launch_controller({**constants.CONFIG, **{'scene': "FloorPlan1"}})
+    test_inverse_project_open3d(controller)
     test_inverse_project_multiple_open3d(controller)
     test_inverse_project(controller)
     test_inverse_project_multiple(controller)

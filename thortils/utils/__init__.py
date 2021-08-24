@@ -11,7 +11,8 @@ from .math import (remap,
                    closest,
                    R_euler,
                    R_quat,
-                   T)
+                   T,
+                   euler_to_quat)
 
 from .algo import PriorityQueue
 

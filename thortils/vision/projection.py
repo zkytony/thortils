@@ -3,7 +3,7 @@ import math
 import numpy as np
 import open3d as o3d
 from tqdm import tqdm
-from thortils.utils import to_rad, R_euler, T, clip
+from thortils.utils.math import to_rad, R_euler, T, clip
 from thortils.controller import thor_controller_param
 
 def extrinsic(camera_pose):
@@ -27,13 +27,16 @@ def extrinsic(camera_pose):
     pos, rot = camera_pose
     x, y, z = pos
     pitch, yaw, roll = rot   # ai2thor convention
-    R = R_euler(pitch, yaw, roll, affine=True)
-    return np.dot(R, T(-x, -y, z))  # I do not know why z needs to be not
-                                    # inverted; This is necessary to make the
-                                    # matrix work properly both for open3d's
-                                    # inverse projection and my own; (my
-                                    # projection functions is tested to work the
-                                    # same way as open3d's)
+    # Unity documentation: In Unity these rotations are performed around the Z
+    # axis, the X axis, and the Y axis, **in that order**; To express this
+    # order in scipy rotation, we have to do 'yxz' (the order of matrix multiplication)
+    Rmat = R_euler(yaw, pitch, roll, order='yxz').as_matrix()
+    ex = np.zeros((4, 4))
+    ex[:3, :3] = Rmat
+    # not sure why z shouldn't be inverted. Perhaps another Unity thing.
+    ex[:3, 3] = np.dot(Rmat, np.array([-x, -y, z]))
+    ex[3, 3] = 1
+    return ex
 
 def extrinsic_inv(camera_pose):
     """Here, we are asked to produce a inverse extrinsic that transforms points
@@ -192,7 +195,8 @@ def open3d_pcd_from_rgbd(color, depth,
     # the transform to the world frame; Here extrinsic_inv is a matrix
     # that assumes ai2thor's coordinate system convention (therefore we had
     # to do the pcd.transform in the last step.)
-    pcd.transform(extrinsic_inv(camera_pose))
+    if camera_pose is not None:
+        pcd.transform(extrinsic_inv(camera_pose))
     return pcd
 
 def pcd_from_rgbd(color, depth,
