@@ -1,18 +1,19 @@
+import argparse
+import random
+import time
 import thortils
+from tqdm import tqdm
 from thortils import constants, thor_object_type
 from thortils.vision import thor_object_bboxes
 from thortils.vision import projection as pj
 from thortils.agent import thor_camera_pose
 from thortils.utils import clip
-import argparse
-import random
-import time
 
-from cospomdp_apps.thor.visual import GridMapVizualizer
+from thortils.utils.visual import GridMapVizualizer
 
 CLASSES = {"CounterTop"} #"Apple",
 
-def main():
+def test_project_object_detection():
     parser = argparse.ArgumentParser(
         description="Keyboard control of agent in ai2thor")
     parser.add_argument("-s", "--scene",
@@ -50,29 +51,28 @@ def main():
         y_center = int(round((y1 + y2) / 2))
 
         color = rgb[x_center, y_center].tolist()
-        points = set()
-        for bv in range(y1, y2):
+        points = []
+        for bv in tqdm(range(y1, y2)):
             for bu in range(x1, x2):
-                # if random.uniform(0,1) < 0.7:
-                # if bv == y_center and bu == x_center:
-                #     import pdb; pdb.set_trace()
-                v = clip(bv, 0, height-1)
-                u = clip(bu, 0, width-1)
-                d = depth[v, u]
-                thor_x, thor_y, thor_z = pj.inverse_projection(u, v, d, intrinsic, einv)
-                x, y = grid_map.to_grid_pos(thor_x, thor_z)
-                y = grid_map.length - y
-                points.add((x, y))
+                if random.uniform(0,1) < 0.05: # only keep 5% of pixels
+                    v = clip(bv, 0, height-1)
+                    u = clip(bu, 0, width-1)
+                    d = depth[v, u]
+                    thor_x, thor_y, thor_z = pj.inverse_projection(u, v, d, intrinsic, einv)
+                    x, y = grid_map.to_grid_pos(thor_x, thor_z)
+                    y = grid_map.length - y  # WHY
+                    points.append((x, y))
         detgrids[objectId] = (cls, color, points)
 
     # highlight
     img = viz.render()
     for objectId in detgrids:
         cls, color, points = detgrids[objectId]
-        img = viz.highlight(img, points, color=color)
+        img = viz.highlight(img, points, color=color, alpha=0.1,
+                            show_progress=True)  # each cell gets very small alpha
 
     viz.show_img(img)
     time.sleep(5)
 
 if __name__ == "__main__":
-    main()
+    test_project_object_detection()
