@@ -3,6 +3,7 @@ import random
 import cv2
 import numpy as np
 import pygame
+from tqdm import tqdm
 
 from .images import overlay, cv2shape
 from .colors import lighter, lighter_with_alpha, inverse_color_rgb, random_unique_color
@@ -71,18 +72,22 @@ class Visualizer2D:
     def render(self):
         return self._make_gridworld_image(self._res)
 
-    def highlight(self, img, locations, color=(128,128,128), shape="rectangle"):
+    def highlight(self, img, locations, color=(128,128,128),
+                  shape="rectangle", alpha=1.0, show_progress=False):
         r = self._res
-        for loc in locations:
+        for loc in tqdm(locations, disable=not show_progress):
             x, y = loc
             if shape == 'rectangle':
-                cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r), color, -1)
+                img = cv2shape(img, cv2.rectangle,
+                               (y*r, x*r), (y*r+r, x*r+r),
+                               color, -1, alpha=alpha)
             elif shape == 'circle':
                 size = r // 2
                 radius = int(round(size / 2))
                 shift = int(round(r / 2))
-                cv2.circle(img, (y*r+shift, x*r+shift), radius,
-                           color, -1)
+                img = cv2.circle(img, cv2.circle,
+                                 (y*r+shift, x*r+shift),
+                                 radius, color, -1, alpha=alpha)
             else:
                 raise ValueError(f"Unknown shape {shape}")
         return img
@@ -209,8 +214,8 @@ class GridMapVizualizer(Visualizer2D):
     def render(self):
         return self._make_gridworld_image(self._res)
 
-    def highlight(self, img, locations, color=(128,128,128), shape="rectangle", thor=False):
+    def highlight(self, img, locations, thor=False, **params):
         if thor:
             locations = [self._grid_map.to_grid_pos(thor_x, thor_y)
                          for thor_x, thor_y in locations]
-        return super().highlight(img, locations, color=color, shape=shape)
+        return super().highlight(img, locations, **params)
