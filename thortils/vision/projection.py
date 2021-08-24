@@ -1,8 +1,9 @@
 import random
 import math
 import numpy as np
-from thortils.utils import to_rad, R_euler, R_quat, T
 import open3d as o3d
+from tqdm import tqdm
+from thortils.utils import to_rad, R_euler, T, clip
 
 def extrinsic(camera_pose):
     """
@@ -23,9 +24,12 @@ def extrinsic(camera_pose):
     0(3x1) | 1
     """
     pos, rot = camera_pose
+    x, y, z = pos
     pitch, yaw, roll = rot   # ai2thor convention
     Rmat = R_euler(pitch, yaw, roll, affine=True)
-    return np.dot(T(*pos), Rmat)     # first rotate, then translate
+    # Note: no idea why it's first translate then rotate; But it works; No idea
+    # why -x is needed. It doesn't match what I have learned!
+    return np.dot(Rmat, T(-x, y, z))
 
 def extrinsic_inv(camera_pose):
     # Somehow simply taking the inverse of extrinsic(camera_pose) does
@@ -83,6 +87,31 @@ def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
     else:
         return (x_c, y_c, z_c)
 
+def projection(x, y, z, intrinsic, camera_pose_or_extrinsic=None):
+    """Converts (x,y,z) in world frame (or camera frame, if
+    camera_pose_or_extrinsic is None) to the image plane.
+    Also returns the depth, which is mirrored.
+    """
+    if camera_pose_or_extrinsic is not None:
+        if type(camera_pose_or_extrinsic) == tuple:
+            camera_pose = camera_pose_or_extrinsic
+            e = extrinsic(camera_pose)
+        else:
+            e = camera_pose_or_extrinsic
+        x_c, y_c, z_c, _ =\
+            np.dot(e, np.asarray([x, y, z, 1.]).transpose())
+    else:
+        x_c, y_c, z_c = x, y, z
+
+    _, _, fx, fy, cx, cy = intrinsic
+    u, v, w = np.dot([[fx, 0., cx, 0.],
+                      [0., -fy, cy, 0.],
+                      [0., 0., 1, 0.]], np.array([x_c, y_c, z_c,1]).transpose())
+    u /= z_c
+    v /= z_c
+    d = -z_c
+    return u, v, d
+
 def open3d_pcd_from_rgbd(color, depth,
                          intrinsic, camera_pose=None,
                          depth_scale=1.0,
@@ -98,7 +127,7 @@ def open3d_pcd_from_rgbd(color, depth,
     depth_trunc: points with depth greater than depth_trunc will be discarded
     """
     width, height, fx, fy, cx, cy = intrinsic
-    depth_img = o3d.geometry.Image(depth)
+    depth_img = o3d.geometry.Image(depth.astype(np.float32))
     color_img = o3d.geometry.Image(color.astype(np.uint8))
     intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
 
@@ -131,20 +160,75 @@ def pcd_from_rgbd(color, depth,
                   intrinsic,
                   camera_pose=None,
                   depth_scale=1.0,
-                  truncate=7,
-                  downsample=0.2):
+                  depth_trunc=7,
+                  downsample=0.2,
+                  show_progress=False):
+    """
+    Given rgbd, return a list of points in 3D and corresponding list of colors.
+
+    Args:
+        color, depth: np.array
+        intrinsic (tuple): output of pinhole_intrinsic
+        camera_pose: (position, rotation) provides extrinsics. If None, then the
+            resulting points will be in camera frame
+    Returns:
+        points, colors: list
+    """
     einv = extrinsic_inv(camera_pose)
     points = []
     colors = []
 
+    if show_progress:
+        enumerator = tqdm(np.ndindex(depth.shape))
+    else:
+        enumerator = np.ndindex(depth.shape)
+
     # The procedure is simlar to open3d_pcd_from_rgbd
-    for v in range(color.shape[0]):
-        for u in range(color.shape[1]):
-            if random.uniform(0,1) < (1. - downsample):  # downsample
-                d = depth[v,u] / depth_scale
-                if d <  0 or d > truncate:
-                    continue  # truncate
-                point = inverse_projection(u, v, d, intrinsic, einv)
-                points.append(point)
-                colors.append(color[v,u] / 255.)
+    for v, u in enumerator:
+        if random.uniform(0,1) < (1. - downsample):  # downsample
+            d = depth[v,u] / depth_scale
+            if d <  0 or d > depth_trunc:
+                continue  # truncate
+            point = inverse_projection(u, v, d, intrinsic, einv)
+            points.append(point)
+            colors.append(color[v,u])
     return points, colors
+
+
+def rgbd_from_pcd(points, colors,
+                  intrinsic, camera_pose=None,
+                  depth_scale=1.0, show_progress=False):
+    """
+    Args:
+        points (list): List of 3D points
+        colors (list): List of corresponding colors (0-255)
+        intrinsic (tuple): output of pinhole_intrinsic
+        camera_pose: (position, rotation) provides extrinsics.
+            If None, then assume the given points to be in camera frame already.
+    Returns:
+        color, depth: np.ndarray
+    """
+    if show_progress:
+        enumerator = tqdm(points)
+    else:
+        enumerator = points
+
+    ex = None
+    if camera_pose is not None:
+        ex = extrinsic(camera_pose)
+
+    width, height = intrinsic[:2]
+    outd = np.zeros((width, height))
+    outrgb = np.full((width, height, 3), [255., 255., 255.])
+    for i, p in enumerate(enumerator):
+        x, y, z = p
+        u, v, d = projection(x, y, z, intrinsic, ex)
+        u = clip(int(round(u)), 0, width-1)
+        v = clip(int(round(v)), 0, height-1)
+        outd[v, u] = d * depth_scale
+        outrgb[v, u] = colors[i]
+    outrgb = np.flip(outrgb, 0)
+    outrgb = np.flip(outrgb, 1)
+    outd = np.flip(outd, 0)
+    outd = np.flip(outd, 1)
+    return outrgb, outd

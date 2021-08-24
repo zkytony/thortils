@@ -24,6 +24,11 @@ def do_step(controller, action, intrinsic, viz):
 def main_open3d():
     # Testing our method to use open3d to get point cloud
 
+    print("This function will show a point cloud visualization"
+          "that is the result of fusing multiple point clouds"
+          "obtained from different robot poses; The RGBD->point cloud"
+          "is performed using open3d's internal method")
+
     parser = argparse.ArgumentParser(
         description="Keyboard control of agent in ai2thor")
     parser.add_argument("-s", "--scene",

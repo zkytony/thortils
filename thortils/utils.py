@@ -48,6 +48,9 @@ def roundany(x, base):
 def floorany(x, base):
     return base * math.floor(x / base)
 
+def clip(x, minval, maxval):
+    return min(maxval, max(x, minval))
+
 ########## Transform
 def R_euler(thx, thy, thz, affine=False):
     """

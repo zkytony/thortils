@@ -14,7 +14,8 @@ setup(name='thortils',
           'numpy',
           'matplotlib',
           'ai2thor=={}'.format(AI2THOR_VERSION),
-          'open3d==0.13.0'
+          'open3d==0.13.0',
+          'tqdm'
       ],
       license='MIT',
       author='Kaiyu Zheng',
