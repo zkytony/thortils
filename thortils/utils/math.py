@@ -2,25 +2,13 @@ import numpy as np
 import math
 from scipy.spatial.transform import Rotation as scipyR
 
+# Operations
 def remap(oldval, oldmin, oldmax, newmin, newmax, enforce=False):
     newval = (((oldval - oldmin) * (newmax - newmin)) / (oldmax - oldmin)) + newmin
     if enforce:
         return min(max(newval, newmin), newmax)
     else:
         return newval
-
-# Math
-def to_radians(th):
-    return th*np.pi / 180
-
-def to_rad(th):
-    return th*np.pi / 180
-
-def to_degrees(th):
-    return th*180 / np.pi
-
-def to_deg(th):
-    return th*180 / np.pi
 
 def closest(values, query):
     """Returns the entry in `values` that is
@@ -47,7 +35,127 @@ def floorany(x, base):
 def clip(x, minval, maxval):
     return min(maxval, max(x, minval))
 
+def diff(rang):
+    return rang[1] - rang[0]
+
+def in_range(x, rang):
+    return x >= rang[0] and x < rang[1]
+
+def in_range_inclusive(x, rang):
+    return x >= rang[0] and x <= rang[1]
+
+def in_region(p, ranges):
+    return in_range(p[0], ranges[0]) and in_range(p[1], ranges[1]) and in_range(p[2], ranges[2])
+
+_operations_ = ['remap',
+                'closest',
+                'normalize_angles',
+                'euclidean_dist',
+                'roundany',
+                'floorany',
+                'clip',
+                'diff',
+                'in_range',
+                'in_range_inclusive',
+                'in_region']
+
+######## Conversions
+def to_radians(th):
+    return th*np.pi / 180
+
+def to_rad(th):
+    return th*np.pi / 180
+
+def to_degrees(th):
+    return th*180 / np.pi
+
+def to_deg(th):
+    return th*180 / np.pi
+
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+
+def pol2cart(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
+
+_conversions_ = ['to_radians',
+                 'to_rad',
+                 'to_degrees',
+                 'to_deg',
+                 'cart2pol',
+                 'pol2cart']
+
 ########## Transform
+def R_x(th):
+    return np.array([
+        1, 0, 0, 0,
+        0, np.cos(th), -np.sin(th), 0,
+        0, np.sin(th), np.cos(th), 0,
+        0, 0, 0, 1
+    ]).reshape(4,4)
+
+def R_y(th):
+    return np.array([
+        np.cos(th), 0, np.sin(th), 0,
+        0, 1, 0, 0,
+        -np.sin(th), 0, np.cos(th), 0,
+        0, 0, 0, 1
+    ]).reshape(4,4)
+
+def R_z(th):
+    return np.array([
+        np.cos(th), -np.sin(th), 0, 0,
+        np.sin(th), np.cos(th), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]).reshape(4,4)
+
+def R2d(th):
+    return np.array([
+        np.cos(th), -np.sin(th),
+        np.sin(th), np.cos(th)
+    ]).reshape(2,2)
+
+def R_between(v1, v2):
+    if len(v1) != 3 or len(v2) != 3:
+        raise ValueError("Only applicable to 3D vectors!")
+    v = np.cross(v1, v2)
+    c = np.dot(v1, v2)
+    s = np.linalg.norm(v)
+    I = np.identity(3)
+
+    vX = np.array([
+        0, -v[2], v[1],
+        v[2], 0, -v[0],
+        -v[1], v[0], 0
+    ]).reshape(3,3)
+    R = I + vX + np.matmul(vX,vX) * ((1-c)/(s**2))
+    return R
+
+def R_euler(thx, thy, thz, affine=False):
+    """
+    Obtain the rotation matrix of Rz(thx) * Ry(thy) * Rx(thz); euler angles
+    """
+    R = scipyR.from_euler("xyz", [thx, thy, thz], degrees=True)
+    if affine:
+        aR = np.zeros((4,4), dtype=float)
+        aR[:3,:3] = R.as_matrix()
+        aR[3,3] = 1
+        R = aR
+    return R
+
+def R_quat(x, y, z, w, affine=False):
+    R = scipyR.from_quat([x,y,z,w])
+    if affine:
+        aR = np.zeros((4,4), dtype=float)
+        aR[:3,:3] = R.as_matrix()
+        aR[3,3] = 1
+        R = aR
+    return R
 def R_euler(thx, thy, thz, affine=False):
     """
     Obtain the rotation matrix of Rz(thx) * Ry(thy) * Rx(thz); euler angles
@@ -92,3 +200,37 @@ def T(dx, dy, dz):
         0, 0, 1, dz,
         0, 0, 0, 1
     ]).reshape(4,4)
+
+def vec(p1, p2):
+    """ vector from p1 to p2 """
+    if type(p1) != np.ndarray:
+        p1 = np.array(p1)
+    if type(p2) != np.ndarray:
+        p2 = np.array(p2)
+    return p2 - p1
+
+def proj(vec1, vec2, scalar=False):
+    # Project vec1 onto vec2. Returns a vector in the direction of vec2.
+    scale = np.dot(vec1, vec2) / np.linalg.norm(vec2)
+    if scalar:
+        return scale
+    else:
+        return vec2 * scale
+
+_transforms_ = ['R_x',
+                'R_y',
+                'R_z',
+                'R2d',
+                'R_between',
+                'R_euler',
+                'R_quat',
+                'R_to_euler',
+                'R_to_quat',
+                'euler_to_quat',
+                'quat_to_euler',
+                'T',
+                'vec',
+                'proj']
+
+
+__all__ = _operations_ + _conversions_ + _transforms_

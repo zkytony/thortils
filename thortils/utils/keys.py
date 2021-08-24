@@ -1,3 +1,7 @@
+__all__ = ['getch',
+           'getkey',
+           'SPECIAL_KEYS']
+
 ######### Keys
 # https://code.activestate.com/recipes/134892/
 class _Getch:
