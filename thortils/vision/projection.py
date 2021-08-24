@@ -7,50 +7,38 @@ from thortils.utils import to_rad, R_euler, T, clip
 from thortils.controller import thor_controller_param
 
 def extrinsic(camera_pose):
-    """
-    Given a camera_pose, returns a 4x4 extrinsic matrix that can transform
+    """Given a camera_pose, returns a 4x4 extrinsic matrix that can transform
     a point in the world frame to the camera frame.
 
     The pose = (position, rotation), where position = (x,y,z)
     and rotation should be of length 3. It is specified
     by euler angles (degrees), same format as ai2thor rotation in pose.
 
-    Note that we expect the camera_pose to be in Ai2thor's format,
-    that means the rotation if of length 3 is (pitch, yaw, roll).
+    The job of the extrinsic matrix is to re-express the coordinates
+    of a point in the world frame with respect to the camera frame.
+    That means, the origin of the camera frame, which is at camera_pose,
+    will become the new (0,0,0). The orientation of the camera frame,
+    after recentering, should match its rotation in the world frame.
 
-    The extrinsic matrix is a 2D array:
-
-    R(3x3) | t(2x1)
-    --------------
-    0(3x1) | 1
+    This means the extrinsic matrix first applies translation to undo
+    the position in the camera_pose, then applies the rotation specified
+    in the camera pose.
     """
     pos, rot = camera_pose
     x, y, z = pos
     pitch, yaw, roll = rot   # ai2thor convention
-    Rmat = R_euler(pitch, yaw, roll, affine=True)
-    # Note: no idea why it's first translate then rotate; But it works; No idea
-    # why -x is needed. It doesn't match what I have learned!
-    return np.dot(Rmat, T(-x, y, z))
+    R = R_euler(pitch, yaw, roll, affine=True)
+    return np.dot(R, T(-x, -y, z))  # I do not know why z needs to be not
+                                    # inverted; This is necessary to make the
+                                    # matrix work properly both for open3d's
+                                    # inverse projection and my own; (my
+                                    # projection functions is tested to work the
+                                    # same way as open3d's)
 
 def extrinsic_inv(camera_pose):
-    # Somehow simply taking the inverse of extrinsic(camera_pose) does
-    # not work when stitching point clouds using open3D. My thought process
-    # of the way that works:
-    #
-    # Here, we are asked to produce a inverse extrinsic that transforms points
-    # from the camera frame to the world frame. We think about this in a similar
-    # way as transforming from world frame to camera frame. First, rotate the
-    # camera frame 'back', and then translate it 'back'. (Recall that when
-    # going world->camera, the frame is first rotated, and then translated.
-    # The rotations are always with respect to the origin; when we are going
-    # camera->world, the origin has become the camera frame's origin.
-    pos, rot = camera_pose
-    x, y, z = pos
-    pitch, yaw, roll = rot
-    Rmat = R_euler(pitch, yaw, roll, affine=True)
-    Rinv_mat = np.linalg.inv(Rmat)  # rotate 'back'
-    Tmat = T(x, -y, -z)  # translate 'back'; **No idea why it's x not -x; -x causes shift**
-    return np.dot(Tmat, Rinv_mat)  # first rotate, then translate
+    """Here, we are asked to produce a inverse extrinsic that transforms points
+    from the camera frame to the world frame."""
+    return np.linalg.inv(extrinsic(camera_pose))
 
 def pinhole_intrinsic(fov, width, height):
     """This intrinsic matrix works based on open3d visualization"""
@@ -76,6 +64,39 @@ def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
 
     camera_pose_or_extrinsic_inv can either be a camera_pose or a
     matrix that is the result of extrinsic_inv()
+
+    Note that the output location, if in world frame, is with respect to the following
+    coordinate frame. Note that the origin is located at the top-left for the scene's
+    top-down view: (TODO: This should probably be straightened out - why doesn't the
+    output coordinate frame match the frame given in the camera_pose_or_extrinsic_inv?
+    This results in the exact same behavior as open3d in visualization; Perhaps it is
+    an open3d <-> ai2hor coordinate frame thing?)
+
+        +y ---> +x
+        |       Scene
+        |    Top-Down-View
+        v +z
+
+    However, ai2thor uses the below one:
+
+        ^ +z
+        |      Scene
+        |   Top-Down-View
+        +y ---> +x
+
+    Not only is the z axis flipped, the origin is at the bottom-left of the scene's
+    top-down view. This has implications for converting the output pose to the actual
+    ai2thor pose, because the length of the scene's top-down view is needed to convert
+    the z axis properly.
+
+    Args:
+        u, v, d (float): specifies the location on the image plane (u, v) with depth d
+        intrinsic (tuple): The output of the pinhole_intrinsic function
+        camera_pose_or_extrinsic_inv (tuple or np.ndarray): either a camera pose (ai2thor
+            pose convention), or an inverse extrinsic matrix (4x4). This is optional.
+    Returns:
+        tuple: (x_w, y_w, z_w): point in world frame, if camera_pose_or_extrinsic_inv is provided
+           OR  (x_c, y_c, z_c): point in camera frame, if camera_pose_or_extrinsic_inv is NOT provided
     """
     _, _, fx, fy, cx, cy = intrinsic
     x_c = (u - cx) * d / fx
@@ -94,6 +115,16 @@ def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
         return (x_w, y_w, z_w)
     else:
         return (x_c, y_c, z_c)
+
+def inverse_projection_to_grid(u, v, d, intrinsic, grid_map, camera_pose_or_extrinsic_inv):
+    """Maps the given image plane location (u,v) and depth d to a location on the
+    given grid map (GridMap). The GridMap is 2D. Note
+    """
+    x_w, y_w, z_w = inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv)
+    grid_x, grid_y = grid_map.to_grid_pos(x_w, z_w)
+    # Because of the z-axis inversion documented in inverse_projection, we need to revert z coordinate
+    grid_y = grid_map.length - grid_y
+    return grid_x, grid_y
 
 def projection(x, y, z, intrinsic, camera_pose_or_extrinsic=None):
     """Converts (x,y,z) in world frame (or camera frame, if

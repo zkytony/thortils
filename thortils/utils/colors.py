@@ -1,14 +1,6 @@
 import random
 import numpy as np
 
-__all__ = ['lighter',
-           'lighter_with_alpha',
-           'rgb_to_hex',
-           'hex_to_rgb',
-           'inverse_color_rgb',
-           'inverse_color_hex',
-           'random_unique_color']
-
 # colors
 def lighter(color, percent):
     '''assumes color is rgb between (0, 0, 0) and (255, 255, 255)
@@ -66,7 +58,6 @@ def random_unique_color(colors, ctype=1, rnd=random, fmt="rgb"):
     else:
         return color
 
-
 def _random_unique_color_hex(colors, ctype=1, rnd=random):
     """
     ctype=1: completely random
@@ -100,3 +91,19 @@ def _random_unique_color_hex(colors, ctype=1, rnd=random):
     else:
         raise ValueError("Unrecognized color type %s" % (str(ctype)))
     return color
+
+def mean_rgb(rgb_array):
+    """
+    rgb_array is a numpy array of shape (w, l, 3)
+    """
+    return np.mean(rgb_array.reshape(-1, 3), axis=0).astype(rgb_array.dtype)
+
+
+__all__ = ['lighter',
+           'lighter_with_alpha',
+           'rgb_to_hex',
+           'hex_to_rgb',
+           'inverse_color_rgb',
+           'inverse_color_hex',
+           'random_unique_color',
+           'mean_rgb']
