@@ -107,7 +107,9 @@ def test_inverse_project_multiple(controller):
         # Testing our own pcd_from_rgbd method
         points, colors = pj.pcd_from_rgbd(rgb, depth, intrinsic,
                                           camera_pose=camera_pose,
-                                          depth_trunc=7, **params)
+                                          depth_trunc=7,
+                                          show_progress=True,
+                                          **params)
         return points, colors
 
     print("""test_inverse_project_multiple
