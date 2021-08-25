@@ -38,13 +38,9 @@ def thor_grid_size_from_controller(controller):
     return thor_controller_param(controller, "gridSize")
 
 def thor_fov_from_controller(controller):
-    return thor_controller_param(controller, "fieldOfView")
+    return controller.fieldOfView
 
 def thor_controller_param(controller, param):
-    if param.lower() == "width":
-        return controller.width
-    elif param.lower() == "height":
-        return controller.height
     return controller.initialization_parameters[param]
 
 def launch_controller(config):
@@ -52,20 +48,28 @@ def launch_controller(config):
     if rotateStepDegrees < 90:
         print("WARNING: Ai2thor version 1.0.1 does not support rotation < 90 degrees.")
 
-    controller = Controller()
-    controller.start()
-    controller.reset(config["scene"])
-    controller.scene = config["scene"]
-
+    width = config.get("IMAGE_WIDTH", constants.IMAGE_WIDTH)
+    height = config.get("IMAGE_HEIGHT", constants.IMAGE_HEIGHT)
     grid_size = config.get("GRID_SIZE", constants.GRID_SIZE)
     fieldOfView = config.get("FOV", constants.FOV)
+
+    controller = Controller()
+    controller.start(player_screen_width=width,
+                     player_screen_height=height)
+    controller.reset(config["scene"])
+    controller.scene = config["scene"]
     controller.initialization_parameters = {
-        "gridSize": grid_size
+        "gridSize": grid_size,
+        'width': width,
+        'height': height,
+        'fieldOfView': fieldOfView
     }
     controller.step(dict(action="Initialize",
                          gridSize=grid_size,
                          fieldOfView=fieldOfView,
-                         renderObjectImage=True))
+                         renderObjectImage=True,
+                         renderDepthImage=True))
+
     return controller
 
 

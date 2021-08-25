@@ -19,8 +19,8 @@ VISIBILITY_DISTANCE = 1.5
 INTERACTION_DISTANCE = 1.5   # objects farther away than this cannot be interacted with.
 AGENT_MODE = "default"   # from official doc: For iTHOR, it is often safest to stick with the default agent.
 
-IMAGE_WIDTH = 600
-IMAGE_HEIGHT = 600
+IMAGE_WIDTH = 300
+IMAGE_HEIGHT = 300
 
 RENDER_DEPTH = True
 RENDER_INSTANCE_SEGMENTATION = True

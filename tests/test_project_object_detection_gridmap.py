@@ -12,11 +12,7 @@ from thortils.utils.colors import mean_rgb
 
 from thortils.utils.visual import GridMapVizualizer
 
-# If take no action
-CLASSES = {"Fridge", "CoffeeMachine", "Toaster"}
-
-# If rotate three times
-CLASSES = {"Book", "CounterTop"}
+CLASSES = {"Bread", "Bowl", "Tomato"}
 
 def test_project_object_detection():
     parser = argparse.ArgumentParser(
@@ -26,10 +22,7 @@ def test_project_object_detection():
                         default="FloorPlan1")
     args = parser.parse_args()
     controller = thortils.launch_controller({**constants.CONFIG, **{"scene": args.scene}})
-    controller.step(action="RotateLeft")
-    controller.step(action="RotateLeft")
-    controller.step(action="RotateLeft")
-    event = controller.step(action="Pass")
+    event = thortils.thor_step(controller, action="Pass")
 
     grid_map = thortils.convert_scene_to_grid_map(controller, args.scene, constants.GRID_SIZE)
     # note that obstacles are simply locations not in the set of reachable locations; they do not imply exact locations of objects
@@ -40,7 +33,7 @@ def test_project_object_detection():
 
     # Get groundtruth object detections
     rgb = event.frame
-    depth = event.depth_frame
+    depth = thortils.rescale_depth(event.depth_frame)
 
     camera_pose = thor_camera_pose(event, as_tuple=True)
     agent_pose = thor_agent_pose(event, as_tuple=True)

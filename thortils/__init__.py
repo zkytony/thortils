@@ -4,7 +4,8 @@ from .controller import (_resolve,
                          launch_controller,
                          thor_scene_from_controller,
                          thor_grid_size_from_controller,
-                         thor_pass)
+                         thor_pass,
+                         thor_step)
 from .object import (thor_all_object_types,
                      thor_object_with_id,
                      thor_object_type,
@@ -58,3 +59,9 @@ def ai2thor_version():
     with open(os.path.join(abs_path, "../AI2THOR_VERSION")) as f:
         version = f.readlines()[0].strip()
     return version
+
+# Note that in version 1.0.1 the depth scale is different.
+# I am rescaling the depth values to meters
+def rescale_depth(depth):
+    # reference: https://github.com/allenai/ai2thor/issues/819
+    return depth *0.001

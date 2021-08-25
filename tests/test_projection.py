@@ -1,11 +1,11 @@
 # This tests our own inverse_projection function, not using open3d
 from thortils.vision import projection as pj
 
-from thortils.controller import launch_controller, thor_controller_param
+from thortils.controller import launch_controller, thor_controller_param, thor_step
 from thortils.object import thor_object_poses
 from thortils.agent import thor_camera_pose
 from thortils.utils import clip
-from thortils import constants
+from thortils import constants, rescale_depth
 import numpy as np
 import open3d as o3d
 import random
@@ -27,10 +27,11 @@ def test_inverse_project_open3d(controller):
     viz = o3d.visualization.Visualizer()
     viz.create_window()
 
-    controller.step(action="RotateLeft")
-    event = controller.step(action="Pass")
+    thor_step(controller, "RotateLeft")
+    event = thor_step(controller, "Pass")
     camera_pose = thor_camera_pose(event, as_tuple=True)
-    pcd = pj.open3d_pcd_from_rgbd(event.frame, event.depth_frame, intrinsic)
+    depth = rescale_depth(event.depth_frame)
+    pcd = pj.open3d_pcd_from_rgbd(event.frame, depth, intrinsic)
     viz.add_geometry(pcd)
     opt = viz.get_render_option()
     opt.show_coordinate_frame = True
@@ -42,10 +43,11 @@ def test_inverse_project_multiple_open3d(controller):
     # Testing our method to use open3d to get point cloud
     def do_step(controller, action, intrinsic, viz):
         print(action)
-        controller.step(action=action)
-        event = controller.step(action="Pass")
+        thor_step(controller, action)
+        event = thor_step(controller, "Pass")
         camera_pose = thor_camera_pose(event, as_tuple=True)
-        pcd = pj.open3d_pcd_from_rgbd(event.frame, event.depth_frame, intrinsic,
+        depth = rescale_depth(event.depth_frame)
+        pcd = pj.open3d_pcd_from_rgbd(event.frame, depth, intrinsic,
                                       camera_pose=camera_pose)
         viz.add_geometry(pcd)
 
@@ -97,9 +99,9 @@ def test_inverse_project(controller):
 
     intrinsic = pj.pinhole_intrinsic(fov, width, height)
 
-    event = controller.step(action="Pass")
+    event = thor_step(controller, "Pass")
     rgb = event.frame
-    depth = event.depth_frame
+    depth = rescale_depth(event.depth_frame)
     camera_pose = thor_camera_pose(event, as_tuple=True)
     print("Computing inverse projections...")
     points, colors = pj.pcd_from_rgbd(rgb, depth, intrinsic,
@@ -126,12 +128,12 @@ def test_inverse_project(controller):
 
 def test_inverse_project_multiple(controller):
     def pcd_after(controller, action, intrinsic, **params):
-        controller.step(action=action)
-        event = controller.step(action="Pass")
+        thor_step(controller, action)
+        event = thor_step(controller, "Pass")
         camera_pose = thor_camera_pose(event, as_tuple=True)
         extrinsic_inv = pj.extrinsic_inv(camera_pose)
         rgb = event.frame
-        depth = event.depth_frame
+        depth = rescale_depth(event.depth_frame)
         # Testing our own pcd_from_rgbd method
         points, colors = pj.pcd_from_rgbd(rgb, depth, intrinsic,
                                           camera_pose=camera_pose,
@@ -189,13 +191,13 @@ def test_project(controller):
     height = thor_controller_param(controller, "height")
     intrinsic = pj.pinhole_intrinsic(fov, width, height)
 
-    controller.step(action="RotateLeft")
-    controller.step(action="LookDown")
-    event = controller.step(action="Pass")
+    thor_step(controller, "RotateLeft")
+    thor_step(controller, "LookDown")
+    event = thor_step(controller, "Pass")
     camera_pose = thor_camera_pose(event, as_tuple=True)
 
     color = event.frame
-    depth = event.depth_frame
+    depth = rescale_depth(event.depth_frame)
     pcd = pj.open3d_pcd_from_rgbd(color, depth, intrinsic,
                                   camera_pose=camera_pose)
     points = np.asarray(pcd.points)
@@ -228,7 +230,7 @@ def rgbd_to_pcd_double(event, intrinsic, camera_pose):
     # then convert this pcd to rgb, then convert this rgb to pcd.
     # This is to test the correctness of our rgbd_from_pcd method.
     color1 = event.frame
-    depth1 = event.depth_frame
+    depth1 = rescale_depth(event.depth_frame)
     # using the open3d method because it is faster
     points1, colors1 = pj.pcd_from_rgbd(color1, depth1, intrinsic,
                                         camera_pose=camera_pose,
@@ -247,8 +249,8 @@ def rgbd_to_pcd_double(event, intrinsic, camera_pose):
 def test_project_multiple(controller):
     def pcd_after(controller, action, intrinsic, **params):
         """returns pcd after given action is executed"""
-        controller.step(action=action)
-        event = controller.step(action="Pass")
+        thor_step(controller, action)
+        event = thor_step(controller, "Pass")
         camera_pose = thor_camera_pose(event, as_tuple=True)
         return rgbd_to_pcd_double(event, intrinsic, camera_pose)
 
