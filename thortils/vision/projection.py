@@ -5,6 +5,7 @@ import open3d as o3d
 from tqdm import tqdm
 from thortils.utils.math import to_rad, R_euler, T, clip
 from thortils.controller import thor_controller_param
+from thortils.utils.colors import mean_rgb
 
 def extrinsic(camera_pose):
     """Given a camera_pose, returns a 4x4 extrinsic matrix that can transform
@@ -281,3 +282,24 @@ def rgbd_from_pcd(points, colors,
     outd = np.flip(outd, 0)
     outd = np.flip(outd, 1)
     return outrgb, outd
+
+def project_bbox_to_grids(bbox, depth, intrinsic, grid_map, rgb=None):
+    width, height = intrinsic[:2]
+    x1, y1, x2, y2 = bbox
+    points = []
+    for bv in tqdm(range(y1, y2)):
+        for bu in range(x1, x2):
+            if random.uniform(0,1) < 0.05: # only keep 5% of pixels
+                v = clip(bv, 0, height-1)
+                u = clip(bu, 0, width-1)
+                d = depth[v, u]
+                x, y = inverse_projection_to_grid(u, v, d,
+                                                  intrinsic,
+                                                  grid_map,
+                                                  einv)
+                points.append((x, y))
+    if rgb is not None:
+        color = mean_rgb(rgb[y1:y2, x1:x2]).tolist()
+        return points, color
+    else:
+        return points
