@@ -4,6 +4,7 @@ import thortils
 import thortils.constants as constants
 from thortils.utils import getch
 import argparse
+import time
 
 def print_controls(controls):
     reverse = {controls[k]:k for k in controls}
@@ -26,7 +27,7 @@ def print_controls(controls):
     print(ss)
 
 
-def main():
+def main(init_func=None, step_func=None):
     parser = argparse.ArgumentParser(
         description="Keyboard control of agent in ai2thor")
     parser.add_argument("-s", "--scene",
@@ -44,6 +45,8 @@ def main():
     print_controls(controls)
 
     controller = thortils.launch_controller({**constants.CONFIG, **{"scene": args.scene}})
+    if init_func is not None:
+        config = init_func(controller)
 
     while True:
         k = getch()
@@ -54,7 +57,10 @@ def main():
         if k in controls:
             action = controls[k]
             params = constants.MOVEMENT_PARAMS[action]
-            controller.step(action=action, **params)
+            event = controller.step(action=action, **params)
+            event = controller.step(action="Pass")
+            if step_func is not None:
+                step_func(event, config)
 
             print("{} | Agent pose: {}".format(k, thortils.thor_agent_pose(controller, as_tuple=True)))
 

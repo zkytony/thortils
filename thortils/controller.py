@@ -35,7 +35,17 @@ def thor_scene_from_controller(controller):
     return controller.scene.split("_")[0]
 
 def thor_grid_size_from_controller(controller):
-    return controller.initialization_parameters["gridSize"]
+    return thor_controller_param(controller, "gridSize")
+
+def thor_fov_from_controller(controller):
+    return thor_controller_param(controller, "fieldOfView")
+
+def thor_controller_param(controller, param):
+    if param.lower() == "width":
+        return controller.width
+    elif param.lower() == "height":
+        return controller.height
+    return controller.initialization_parameters[param]
 
 def launch_controller(config):
     rotateStepDegrees = config.get("H_ROTATION", constants.H_ROTATION)

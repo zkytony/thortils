@@ -77,19 +77,25 @@ def thor_teleport(controller, position, rotation, horizon):
                          standing=True))  # we don't deal with this
     return controller.step(dict(action="Pass"))
 
+def thor_camera_position(event_or_controller, as_tuple=False):
+    event = _resolve(event_or_controller)
+    pos = thor_get(event, "cameraPosition")
+    if as_tuple:
+        return (pos['x'], pos['y'], pos['z'])
+    return pos
 
-def thor_camera_pose(event_or_controller, get_tuples=False):
+def thor_camera_pose(event_or_controller, as_tuple=False):
     """
     This is exactly the same as thor_agent_pose
     except that the pitch of the rotation is set
     to camera horizon. Everything else is the same.
     """
     event = _resolve(event_or_controller)
-    position = thor_get(event, "agent", "position")
+    position = thor_camera_position(event)
     rotation = thor_get(event, "agent", "rotation")
     assert abs(rotation["z"]) < 1e-3  # assert that there is no roll
     cameraHorizon = thor_get(event, "agent", "cameraHorizon")
-    if get_tuples:
+    if as_tuple:
         return (position["x"], position["y"], position["z"]),\
             (cameraHorizon, rotation["y"], 0)
     else:
@@ -104,7 +110,8 @@ def thor_camera_horizon(event_or_controller):
 
 def thor_place_agent_randomly(controller,
                               v_angles=V_ANGLES,
-                              h_angles=H_ANGLES):
+                              h_angles=H_ANGLES,
+                              rnd=random):
     """Place the agent randomly in an environment;
     Both the position and rotation will be random,
     but valid.
@@ -115,9 +122,9 @@ def thor_place_agent_randomly(controller,
        h_angles (list): List of valid yaw (rotation) angles"""
     reachable_positions = thor_reachable_positions(controller)
     agent_pose = thor_agent_pose(controller.last_event, as_tuple=False)
-    pos = random.sample(reachable_positions, 1)[0]
-    pitch = random.sample(v_angles, 1)[0]
-    yaw = random.sample(h_angles, 1)[0]
+    pos = rnd.sample(reachable_positions, 1)[0]
+    pitch = rnd.sample(v_angles, 1)[0]
+    yaw = rnd.sample(h_angles, 1)[0]
     return controller.step(action="Teleport",
                            position=dict(x=pos[0], y=agent_pose[0]['y'], z=pos[1]),
                            rotation=dict(x=agent_pose[1]['x'], y=yaw, z=agent_pose[1]['z']),
