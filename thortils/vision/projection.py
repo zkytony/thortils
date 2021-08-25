@@ -145,9 +145,8 @@ def projection(x, y, z, intrinsic, camera_pose_or_extrinsic=None):
             np.dot(e, np.asarray([x, y, z, 1.]).transpose())
     else:
         x_c, y_c, z_c = x, y, z
-
     _, _, fx, fy, cx, cy = intrinsic
-    u, v, w = np.dot([[fx, 0., cx, 0.],
+    u, v, _ = np.dot([[fx, 0., cx, 0.],
                       [0., -fy, cy, 0.],
                       [0., 0., 1, 0.]], np.array([x_c, y_c, z_c,1]).transpose())
     u /= z_c
@@ -283,13 +282,22 @@ def rgbd_from_pcd(points, colors,
     outd = np.flip(outd, 1)
     return outrgb, outd
 
-def project_bbox_to_grids(bbox, depth, intrinsic, grid_map, rgb=None):
+def project_bbox_to_grids(bbox, depth, grid_map, intrinsic,
+                          camera_pose=None, rgb=None, einv=None,
+                          downsample=0.1):
+    """
+    downsample: the percentage of pixels remaining in the bounding box
+    used to convert to grids.
+    """
     width, height = intrinsic[:2]
     x1, y1, x2, y2 = bbox
-    points = []
+    grids = []
+    if einv is None:
+        assert camera_pose is not None, "must supply camera pose if not providing extrinsic inverse"
+        einv = extrinsic_inv(camera_pose)
     for bv in tqdm(range(y1, y2)):
         for bu in range(x1, x2):
-            if random.uniform(0,1) < 0.05: # only keep 5% of pixels
+            if random.uniform(0,1) < (1-downsample): # only keep 5% of pixels
                 v = clip(bv, 0, height-1)
                 u = clip(bu, 0, width-1)
                 d = depth[v, u]
@@ -297,9 +305,9 @@ def project_bbox_to_grids(bbox, depth, intrinsic, grid_map, rgb=None):
                                                   intrinsic,
                                                   grid_map,
                                                   einv)
-                points.append((x, y))
+                grids.append((x, y))
     if rgb is not None:
         color = mean_rgb(rgb[y1:y2, x1:x2]).tolist()
-        return points, color
+        return grids, color
     else:
-        return points
+        return grids

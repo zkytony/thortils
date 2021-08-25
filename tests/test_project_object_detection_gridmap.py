@@ -54,20 +54,8 @@ def test_project_object_detection():
             continue
 
         print("Projecting bounding box for {}".format(cls))
-        x1, y1, x2, y2 = bboxes[objectId]
-        x_center = int(round((x1 + x2) / 2))
-        y_center = int(round((y1 + y2) / 2))
-
-        color = mean_rgb(rgb[y1:y2, x1:x2]).tolist()
-        points = []
-        for bv in tqdm(range(y1, y2)):
-            for bu in range(x1, x2):
-                if random.uniform(0,1) < 0.05: # only keep 5% of pixels
-                    v = clip(bv, 0, height-1)
-                    u = clip(bu, 0, width-1)
-                    d = depth[v, u]
-                    x, y = pj.inverse_projection_to_grid(u, v, d, intrinsic, grid_map, einv)
-                    points.append((x, y))
+        points, color = pj.project_bbox_to_grids(bboxes[objectId], depth, grid_map,
+                                                 intrinsic, rgb=rgb, einv=einv)
         detgrids[objectId] = (cls, color, points)
 
     # highlight
