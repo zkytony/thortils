@@ -23,6 +23,15 @@ def lighter_with_alpha(color, percent):
     cc[3] = color[3] + (color-white)[3]*(percent)
     return cc
 
+def linear_color_gradient(rgb_start, rgb_end, n):
+    colors = [rgb_start]
+    for t in range(1, n):
+        colors.append(tuple(
+            rgb_start[i] + float(t)/(n-1)*(rgb_end[i] - rgb_start[i])
+            for i in range(3)
+        ))
+    return colors
+
 def rgb_to_hex(rgb):
     r,g,b = rgb
     return '#%02x%02x%02x' % (int(r), int(g), int(b))

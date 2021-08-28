@@ -67,8 +67,8 @@ class Visualizer2D:
                               (0, 0, 0), self._linewidth)
         return img
 
-    def visualize(self, **kwargs):
-        self.show_img(self.render())
+    def visualize(self, *args, **kwargs):
+        return self.show_img(self.render(*args, **kwargs))
 
     def render(self):
         return self._make_gridworld_image(self._res)
