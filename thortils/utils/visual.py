@@ -45,6 +45,9 @@ class Visualizer2D:
         self._myfont = pygame.font.SysFont('Comic Sans MS', 30)
         self._initialized = True
 
+    def on_cleanup(self):
+        pygame.display.quit()
+        pygame.quit()
 
     def _make_gridworld_image(self, r):
         # Preparing 2d array
@@ -74,21 +77,26 @@ class Visualizer2D:
         return self._make_gridworld_image(self._res)
 
     def highlight(self, img, locations, color=(128,128,128),
-                  shape="rectangle", alpha=1.0, show_progress=False):
+                  shape="rectangle", alpha=1.0, show_progress=False, scale=1.0):
         r = self._res
         for loc in tqdm(locations, disable=not show_progress):
             x, y = loc
             if shape == 'rectangle':
+                shift = (r - scale*r) / 2
+                topleft = (int(round(y*r + shift)),
+                           int(round(x*r + shift)))
+                bottomright = (int(round(y*r + r - shift)),
+                               int(round(x*r + r - shift)))
                 img = cv2shape(img, cv2.rectangle,
-                               (y*r, x*r), (y*r+r, x*r+r),
+                               topleft, bottomright,
                                color, -1, alpha=alpha)
             elif shape == 'circle':
-                size = r // 2
+                size = scale*r
                 radius = int(round(size / 2))
                 shift = int(round(r / 2))
-                img = cv2.circle(img, cv2.circle,
-                                 (y*r+shift, x*r+shift),
-                                 radius, color, -1, alpha=alpha)
+                img = cv2shape(img, cv2.circle,
+                               (y*r+shift, x*r+shift),
+                               radius, color, -1, alpha=alpha)
             else:
                 raise ValueError(f"Unknown shape {shape}")
         return img
