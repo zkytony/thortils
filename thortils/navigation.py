@@ -405,7 +405,7 @@ def get_shortest_path_to_object(controller, object_id,
                                                           reachable_positions,
                                                           debug=True,
                                                           **params)
-
+    # # For debugging purposes
     # plot_navigation_search_result(start_pose,
     #                               (target_position, start_rotation),
     #                               tentative_plan,
