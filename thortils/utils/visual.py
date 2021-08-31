@@ -221,7 +221,7 @@ class Visualizer2D:
         return img
 
 
-class GridMapVizualizer(Visualizer2D):
+class GridMapVisualizer(Visualizer2D):
     """
     Visualizer for a given grid map (GridMap).
     """
