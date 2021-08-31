@@ -243,6 +243,7 @@ def find_navigation_plan(start, goal, navigation_actions,
                          reachable_positions,
                          goal_distance=0.0,
                          grid_size=None,
+                         angle_tolerance=5,
                          diagonal_ok=False,
                          return_pose=False,
                          debug=False):
@@ -262,8 +263,7 @@ def find_navigation_plan(start, goal, navigation_actions,
         start (tuple): position, rotation of the start
         goal (tuple): position, rotation of the goal n
         navigation_actions (list): list of navigation actions,
-            represented as ("ActionName", dpos, drot), where
-            dpos is (dx,dy,dz), and drot is (dpitch, dyaw, droll).
+            represented as ("ActionName", (forward, h_angles, v_angles)),
         goal_distance (bool): acceptable minimum euclidean distance to the goal
         grid_size (float): size of the grid, typically 0.25. Only
             necessary if `diagonal_ok` is True
@@ -307,7 +307,8 @@ def find_navigation_plan(start, goal, navigation_actions,
         if _round_pose(current_pose) in visited:
             continue
         if _same_pose(current_pose, goal,
-                      tolerance=goal_distance):
+                      tolerance=goal_distance,
+                      angle_tolerance=angle_tolerance):
             if debug:
                 plan = _reconstruct_plan(comefrom,
                                          current_pose,
@@ -382,10 +383,11 @@ def get_shortest_path_to_object(controller, object_id,
     # The second time then finds a complete plan that includes
     # reaching the pitch and yaw.
     #
-    # Note that you can't just compute goal pitch and yaw
-    # some other way, for example, using the closest position,
-    # because that position may not be the end point on the shortest path.
-    # Closest position != Shortest path!!!!
+    # Note that you can't just compute goal pitch and yaw some other
+    # way, for example, using the closest position, because that
+    # position may not be the end point on the shortest path.  Closest
+    # reachable position to the target is not necessarily on the
+    # Shortest path!!!!
     #
     # The algorithm is pretty fast so calling twice won't be an issue
     target_position = thor_object_pose(controller, object_id, as_tuple=True)
