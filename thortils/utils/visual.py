@@ -14,6 +14,16 @@ __all__ = ['Visualizer2D']
 class Visualizer2D:
 
     def __init__(self, **config):
+        """
+        2D visualizer using pygame.
+
+        config entries:
+        - res: resolution
+        - region: an object with properties width, length, obstacles
+        - linewidth: line width when drawing grid cells
+        - bg_path: Path to an image to place in the background
+        - colors: maps from object id to (r, g, b)
+        """
         self._res = config.get("res", 30)   # resolution
         self._region = config.get("region", None)
         self._linewidth = config.get("linewidth", 1)
@@ -216,6 +226,12 @@ class GridMapVizualizer(Visualizer2D):
     Visualizer for a given grid map (GridMap).
     """
     def __init__(self, **config):
+        """
+        Visualizer for grid map (GridMap).
+
+        config entries:
+            grid_map: GridMap
+        """
         self._grid_map = config.get("grid_map", None)
         super().__init__(**config)
         self._region = self._grid_map
