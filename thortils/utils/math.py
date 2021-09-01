@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation as scipyR
@@ -216,5 +217,36 @@ _transforms_ = ['R_x',
                 'vec',
                 'proj']
 
+# Probability
+def sep_spatial_sample(candidates, sep, num_samples,
+                       sample_func=None):
+    """Draws samples from candidates,
+    such that the samples are minimally of euclidean distance
+    `sep` apart. Note that this will attempt to
+    draw `num_samples` samples but is not guaranteed
+    to return this number of samples.
 
-__all__ = _operations_ + _conversions_ + _transforms_
+    You can optionally supply a sample_func
+    that takes in the candidates and return
+    a sample. If not provided, will draw uniformly.
+
+    The samples will not be at duplicate locations."""
+    samples = set()
+    for _ in range(num_samples):
+        if sample_func is None:
+            s = random.sample(candidates, 1)[0]
+        else:
+            s = sample_func(candidates)
+
+        if len(samples) > 0:
+            closest = min(samples,
+                          key=lambda c: euclidean_dist(s, c))
+            if euclidean_dist(closest, s) >= sep:
+                samples.add(s)
+        else:
+            samples.add(s)
+    return samples
+
+_probability_ = ["sep_spatial_sample"]
+
+__all__ = _operations_ + _conversions_ + _transforms_ + _probability_

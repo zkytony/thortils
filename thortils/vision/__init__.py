@@ -1,12 +1,19 @@
 from ..controller import _resolve, thor_get
 
-def thor_img(event_or_controller):
+def thor_img(event_or_controller, cv2=True):
     event = _resolve(event_or_controller)
-    return event.cv2img
+    if cv2:
+        return event.cv2img  # note that cv2 is bgr
+    else:
+        return event.frame
 
 def thor_img_depth(event_or_controller):
     event = _resolve(event_or_controller)
     return event.depth_frame
+
+def thor_rgbd(event_or_controller):
+    event = _resolve(event_or_controller)
+    return event.frame, event.depth_frame
 
 def thor_object_bboxes(event_or_controller):
     """The keys are object IDs and the values are=
