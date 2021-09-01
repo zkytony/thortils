@@ -41,22 +41,26 @@ class GridMap:
         """
         self.width = width
         self.length = length
+        self.name = name
+        self.ranges_in_thor = ranges_in_thor
+        self.grid_size = grid_size
+        self.update(obstacles, unknown=unknown)
 
-        all_positions = {(x,y) for x in range(width)
-                         for y in range(length)}
+        # Caches the computations
+        self._geodesic_dist_cache = {}
+        self._blocked_cache = {}
+
+
+    def update(self, obstacles, unknown=None):
+        all_positions = {(x,y) for x in range(self.width)
+                         for y in range(self.length)}
+
         self.obstacles = obstacles
         if unknown is None:
             unknown = set()
         self.unknown = unknown
         self.free_locations = all_positions - self.obstacles - self.unknown
 
-        self.name = name
-        self.ranges_in_thor = ranges_in_thor
-        self.grid_size = grid_size
-
-        # Caches the computations
-        self._geodesic_dist_cache = {}
-        self._blocked_cache = {}
 
     @staticmethod
     def to_grid_yaw(thor_yaw):

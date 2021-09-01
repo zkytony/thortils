@@ -10,7 +10,7 @@ from thortils.agent import thor_camera_pose, thor_agent_pose
 from thortils.utils import clip
 from thortils.utils.colors import mean_rgb
 
-from thortils.utils.visual import GridMapVizualizer
+from thortils.utils.visual import GridMapVisualizer
 
 # If take no action
 CLASSES = {"Fridge", "CoffeeMachine", "Toaster"}
@@ -31,9 +31,10 @@ def test_project_object_detection():
     controller.step(action="RotateLeft")
     event = controller.step(action="Pass")
 
-    grid_map = thortils.convert_scene_to_grid_map(controller, args.scene, constants.GRID_SIZE)
+    grid_map = thortils.proper_convert_scene_to_grid_map(controller, constants.GRID_SIZE)
+    # grid_map = thortils.convert_scene_to_grid_map(controller, args.scene, constants.GRID_SIZE)
     # note that obstacles are simply locations not in the set of reachable locations; they do not imply exact locations of objects
-    viz = GridMapVizualizer(grid_map=grid_map, obstacle_color=(230, 230, 230))
+    viz = GridMapVisualizer(grid_map=grid_map, obstacle_color=(230, 230, 230))
 
     intrinsic = pj.thor_camera_intrinsic(controller)
     width, height = intrinsic[:2]
@@ -55,7 +56,8 @@ def test_project_object_detection():
 
         print("Projecting bounding box for {}".format(cls))
         points, color = pj.project_bbox_to_grids(bboxes[objectId], depth, grid_map,
-                                                 intrinsic, rgb=rgb, einv=einv)
+                                                 intrinsic, rgb=rgb, einv=einv,
+                                                 downsample=0.05)
         detgrids[objectId] = (cls, color, points)
 
     # highlight

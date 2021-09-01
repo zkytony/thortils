@@ -9,8 +9,6 @@ import thortils as tt
 
 from thortils.vision import thor_rgbd
 
-from thortils.agent import (thor_camera_pose,
-                            thor_place_agent_randomly)
 from thortils import constants
 from thortils.utils.math import sep_spatial_sample, remap, euclidean_dist
 from thortils.grid_map import GridMap
@@ -63,6 +61,7 @@ class Map3D:
             obtained from thor_camera_pose.
         kwargs: See thortils.vision.projection.open3d_pcd_from_rgbd
         """
+        # Using pj.pcd_from_rgbd gives the same result, but it is much slower
         pcd = pj.open3d_pcd_from_rgbd(color, depth, intrinsic, camera_pose,
                                       **kwargs)
         # We could merge point clouds like this becasue ai2thor's RGBD and
@@ -98,14 +97,27 @@ class Map3D:
     def to_grid_map(self,
                     ceiling_cut=1.0,
                     floor_cut=0.1,
-                    debug=False,
                     grid_size=0.25,
-                    scene=None):
+                    thor_reachable_positions=None,
+                    scene=None,
+                    debug=False):
         """Converts the 3D map of point clouds to a GridMap which is 2D.
-        ceiling_cut (float): The points within `ceiling_cut` range (in meters) from the ymax
-            will be regarded as "ceiling"; You may want to set this number so
-            that the hanging lights are excluded.
-        floor_cut: same as ceiling_cut, but for floors. Set this to 0.4 for FloorPlan201"""
+
+        Args:
+            ceiling_cut (float): The points within `ceiling_cut` range (in meters) from the ymax
+                will be regarded as "ceiling"; You may want to set this number so
+                that the hanging lights are excluded.
+            floor_cut: same as ceiling_cut, but for floors. Set this to 0.4 for FloorPlan201
+            debug_args (dict): Things to pass in for use in debuging;
+
+            thor_reachable_positions: If reachable_positions is not None,
+                then it should be reachable_positions in thor coordinates, returned by
+                thor_reachable_positions; This is used to make sure the free locations
+                in the resulting grid map are only the reachable locations.
+
+        Returns:
+            GridMap
+        """
         downpcd = self.pcd.voxel_down_sample(voxel_size=0.05)
         points = np.asarray(downpcd.points)
 
@@ -122,8 +134,8 @@ class Map3D:
         ceiling_points_filter = np.isclose(points[:,1], ymax, atol=ceiling_cut)
         xwalls_min_filter = np.isclose(points[:,0], xmin, atol=0.05)
         xwalls_max_filter = np.isclose(points[:,0], xmax, atol=0.05)
-        zwalls_min_filter = np.isclose(points[:,0], zmin, atol=0.05)
-        zwalls_max_filter = np.isclose(points[:,0], zmax, atol=0.05)
+        zwalls_min_filter = np.isclose(points[:,2], zmin, atol=0.05)
+        zwalls_max_filter = np.isclose(points[:,2], zmax, atol=0.05)
         boundary_filter = np.any([floor_points_filter,
                                   ceiling_points_filter,
                                   xwalls_min_filter,
@@ -131,6 +143,7 @@ class Map3D:
                                   zwalls_min_filter,
                                   zwalls_max_filter], axis=0)
         not_boundary_filter = np.logical_not(boundary_filter)
+
 
         # For Debugging
         if debug:
@@ -153,6 +166,8 @@ class Map3D:
         thor_gy = thor_grid_points[:,2]
         width = max(thor_gx) - min(thor_gx) + 1
         length = max(thor_gy) - min(thor_gy) + 1
+        # Because of the axis-flip coordinate issue [**]
+        thor_gy = -thor_gy
         thor_gx_range = (min(thor_gx), max(thor_gx) + 1)
         thor_gy_range = (min(thor_gy), max(thor_gy) + 1)
         # remap coordinates to be nonnegative (origin AT (0,0))
@@ -175,50 +190,62 @@ class Map3D:
         thor_reachable_grid_points = (thor_reachable_points / grid_size).astype(int)
         thor_reachable_gx = thor_reachable_grid_points[:,0]
         thor_reachable_gy = thor_reachable_grid_points[:,2]
+        thor_reachable_gy = -thor_reachable_gy  # see [**] #length
 
         thor_obstacle_points = points[not_boundary_filter]
         thor_obstacle_points[:,1] = 0
         thor_obstacle_grid_points = (thor_obstacle_points / grid_size).astype(int)
         thor_obstacle_gx = thor_obstacle_grid_points[:,0]
         thor_obstacle_gy = thor_obstacle_grid_points[:,2]
+        thor_obstacle_gy = -thor_obstacle_gy  # see [**] length
+
+        # For Debugging
+        if debug:
+            reachable_colors = np.full((thor_reachable_points.shape[0], 3), (0.7, 0.7, 0.7))
+            obstacle_colors = np.full((thor_obstacle_points.shape[0], 3), (0.2, 0.2, 0.2))
+
+            # We now grab points
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(np.asarray(thor_reachable_points))
+            pcd.colors = o3d.utility.Vector3dVector(np.asarray(reachable_colors))
+
+            # We now grab points
+            pcd2 = o3d.geometry.PointCloud()
+            pcd2.points = o3d.utility.Vector3dVector(np.asarray(thor_obstacle_points))
+            pcd2.colors = o3d.utility.Vector3dVector(np.asarray(obstacle_colors))
+            o3d.visualization.draw_geometries([pcd, pcd2])
 
         gx_reachable = remap(thor_reachable_gx, thor_gx_range[0], thor_gx_range[1], 0, width).astype(int)
         gy_reachable = remap(thor_reachable_gy, thor_gy_range[0], thor_gy_range[1], 0, length).astype(int)
         gx_obstacles = remap(thor_obstacle_gx, thor_gx_range[0], thor_gx_range[1], 0, width).astype(int)
         gy_obstacles = remap(thor_obstacle_gy, thor_gy_range[0], thor_gy_range[1], 0, length).astype(int)
 
-        all_positions = set(zip(gx, gy))
+        all_positions = set((x,y) for x in range(width) for y in range(length))
         grid_map_reachable_positions = set(zip(gx_reachable, gy_reachable))
         grid_map_obstacle_positions = set(zip(gx_obstacles, gy_obstacles))
 
         grid_map = GridMap(width, length,
                            grid_map_obstacle_positions,
-                           unknown=all_positions - grid_map_obstacle_positions,
+                           unknown=(all_positions\
+                                    - grid_map_obstacle_positions\
+                                    - grid_map_reachable_positions),
                            name=scene,
                            ranges_in_thor=(thor_gx_range, thor_gy_range),
                            grid_size=grid_size)
-        # assert grid_map.free_locations == grid_map_reachable_positions
 
-        # For Debugging
-        if debug:
-            # reachable_colors = np.full((reachable_points.shape[0], 3), (0.7, 0.7, 0.7))
-            # obstacle_colors = np.full((obstacle_points.shape[0], 3), (0.2, 0.2, 0.2))
+        if thor_reachable_positions is not None:
+            obstacles = grid_map.obstacles
+            correct_reachable_positions = set()
+            for thor_pos in thor_reachable_positions:
+                grid_pos = grid_map.to_grid_pos(*thor_pos)
+                correct_reachable_positions.add(grid_pos)
+                if grid_pos in obstacles:
+                    obstacles.remove(grid_pos)
 
-            # # We now grab points
-            # pcd = o3d.geometry.PointCloud()
-            # pcd.points = o3d.utility.Vector3dVector(np.asarray(reachable_points))
-            # pcd.colors = o3d.utility.Vector3dVector(np.asarray(reachable_colors))
-
-            # # We now grab points
-            # pcd2 = o3d.geometry.PointCloud()
-            # pcd2.points = o3d.utility.Vector3dVector(np.asarray(obstacle_points))
-            # pcd2.colors = o3d.utility.Vector3dVector(np.asarray(obstacle_colors))
-            # o3d.visualization.draw_geometries([pcd, pcd2])
-            from thortils.utils.visual import GridMapVisualizer
-            viz = GridMapVisualizer(grid_map=grid_map,
-                                    res=30)
-            img = viz.render()
-            viz.show_img(img)
+            for pos in grid_map.free_locations:
+                if pos not in correct_reachable_positions:
+                    obstacles.add(pos)
+            grid_map.update(obstacles, unknown=grid_map.unknown)
         return grid_map
 
 
@@ -226,28 +253,28 @@ class Mapper3D:
     """This is intended to be a convenience object for building
     a 3D map with one set of camera intrinsic parameters, and
     interfacing directly with ai2thor events."""
-    def __init__(self, intrinsic, **config):
-        self.intrinsic = intrinsic
-        self.config = config
+    def __init__(self, controller):
+        self.controller = controller
+        self.intrinsic = pj.thor_camera_intrinsic(controller)
         self._map = Map3D()
 
     @property
     def map(self):
         return self._map
 
-    def update(self, event):
+    def update(self, event, **kwargs):
         """Given an ai2thor event, update the map using the contained rgbd image,
-        as well as agent state."""
+        as well as agent state.
+        kwargs: See thortils.vision.projection.open3d_pcd_from_rgbd"""
         color, depth = tt.vision.thor_rgbd(event)
         camera_pose = tt.thor_camera_pose(event, as_tuple=True)
-        self._map.add_from_rgbd(color, depth, self.intrinsic, camera_pose, **self.config)
+        self._map.add_from_rgbd(color, depth, self.intrinsic, camera_pose, **kwargs)
 
-    @staticmethod
-    def automate(controller,
-                 num_stops=20, num_rotates=4,
+    def automate(self, num_stops=20, num_rotates=4,
                  v_angles=constants.V_ANGLES,
                  h_angles=constants.H_ANGLES,
-                 rnd=random, sep=1.25, downsample=True, **kwargs):
+                 seed=1000, sep=1.25,
+                 downsample=True, **kwargs):
         """Automatically build a map, by randomly placing
         the agent in the environment, taking RGBD images,
         and then update the map;
@@ -256,20 +283,41 @@ class Mapper3D:
         num_rotates: Number of random rotations at each place
         sep: the minimum separation the sampled agent locations should have
 
-        kwargs: See thortils.vision.projection.open3d_pcd_from_rgbd"""
-        reachable_positions = tt.thor_reachable_positions(controller)
-        placements = sep_spatial_sample(reachable_positions, sep, num_stops)
+        kwargs: See thortils.vision.projection.open3d_pcd_from_rgbd;
 
-        intrinsic = pj.thor_camera_intrinsic(controller)
-        mapper = Mapper3D(intrinsic, **kwargs)
+        Will reset the agent to the initial pose after finish.
+
+        After finish, you can access the map through the map attribute."""
+        rnd = random.Random(seed)
+
+        initial_agent_pose = tt.thor_agent_pose(self.controller)
+        initial_horizon = tt.thor_camera_horizon(self.controller.last_event)
+
+        reachable_positions = tt.thor_reachable_positions(self.controller)
+        placements = sep_spatial_sample(reachable_positions, sep, num_stops,
+                                        rnd=rnd)
+
         for pos in tqdm(placements, desc="Building map"):
             for _ in range(num_rotates):
-                event = tt.thor_place_agent_randomly(controller,
+                event = tt.thor_place_agent_randomly(self.controller,
                                                      pos=pos,
                                                      v_angles=v_angles,
                                                      h_angles=h_angles,
                                                      rnd=rnd)
-                mapper.update(event)
+                self.update(event, **kwargs)
         if downsample:
-            mapper.map.downsample()
-        return mapper
+            self.map.downsample()
+        tt.thor_teleport(self.controller,
+                         initial_agent_pose[0],
+                         initial_agent_pose[1],
+                         initial_horizon)
+
+        return self.map
+
+    def get_grid_map(self, **kwargs):
+        """Obtain the GridMap from current 3D map."""
+        scene = tt.thor_scene_from_controller(self.controller)
+        reachable_positions = tt.thor_reachable_positions(self.controller)
+        return self.map.to_grid_map(thor_reachable_positions=reachable_positions,
+                                    scene=scene,
+                                    **kwargs)

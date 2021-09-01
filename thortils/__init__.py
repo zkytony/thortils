@@ -45,7 +45,8 @@ from .interactions import (OpenObject,
                            RemoveFromScene)
 
 from .scene import (robothor_scene_names, ithor_scene_names,
-                    convert_scene_to_grid_map)
+                    convert_scene_to_grid_map,
+                    proper_convert_scene_to_grid_map)
 
 from .navigation import compute_spl, spl_ratio
 

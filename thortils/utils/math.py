@@ -228,7 +228,7 @@ _transforms_ = ['R_x',
 
 # Probability
 def sep_spatial_sample(candidates, sep, num_samples,
-                       sample_func=None):
+                       sample_func=None, rnd=random):
     """Draws samples from candidates,
     such that the samples are minimally of euclidean distance
     `sep` apart. Note that this will attempt to
@@ -243,7 +243,7 @@ def sep_spatial_sample(candidates, sep, num_samples,
     samples = set()
     for _ in range(num_samples):
         if sample_func is None:
-            s = random.sample(candidates, 1)[0]
+            s = rnd.sample(candidates, 1)[0]
         else:
             s = sample_func(candidates)
 

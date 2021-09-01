@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 from ai2thor.controller import Controller
 from . import constants
 from .grid_map import GridMap
-from .controller import launch_controller
+from .controller import launch_controller, thor_scene_from_controller
 from .agent import thor_reachable_positions
+from .map3d import Mapper3D
 from .utils import remap, euclidean_dist
 
 
@@ -119,6 +120,29 @@ def convert_scene_to_grid_map(controller_or_reachable_positions,
                        ranges_in_thor=(thor_gx_range, thor_gy_range),
                        grid_size=grid_size)
 
+    return grid_map
+
+
+def proper_convert_scene_to_grid_map(controller,
+                                     grid_size,
+                                     floor_cut=0.1,
+                                     ceiling_cut=1.0,
+                                     **kwargs):
+    """
+    kwargs are optional arguments for Mapper3D.automate.
+    Includes:
+        num_stops=20,
+        num_rotates=4,
+        sep=1.25,
+        downsample=True,
+        **kwargs):
+    """
+    # Will use Mapper3D
+    mapper = Mapper3D.automate(controller, **kwargs)
+    grid_map = mapper.map.to_grid_map(floor_cut=floor_cut,
+                                      ceiling_cut=ceiling_cut,
+                                      grid_size=grid_size,
+                                      scene=thor_scene_from_controller(controller))
     return grid_map
 
 
