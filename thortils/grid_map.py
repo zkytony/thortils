@@ -21,12 +21,18 @@ class GridMap:
     the discrete map in Thor to integer indices.
     """
 
-    def __init__(self, width, length, obstacles, name="grid_map",
+    def __init__(self, width, length, obstacles,
+                 unknown=None, name="grid_map",
                  ranges_in_thor=None, grid_size=None):
         """
         xpos (list): list of x coordinates for free cells
         ypos (list): list of y coordinates for free cells
         obstacles (set): a set of locations for the obstacles
+        unknown (set): locations that have unknown properties.
+            If None, then this set will be empty; The free locations
+            of a grid map is
+                ALL_CELLS(width, length) - obstacles - unknown
+
         ranges_in_thor (tuple): A tuple (thor_gx_range, thor_gy_range)
             where thor_gx_range are the min max range for grid x coordiates in thor
             where thor_gy_range are the min max range for grid y coordiates in thor
@@ -36,10 +42,13 @@ class GridMap:
         self.width = width
         self.length = length
 
+        all_positions = {(x,y) for x in range(width)
+                         for y in range(length)}
         self.obstacles = obstacles
-        self.free_locations = {(x,y) for x in range(width)
-                               for y in range(length)
-                               if (x,y) not in obstacles}
+        if unknown is None:
+            unknown = set()
+        self.unknown = unknown
+        self.free_locations = all_positions - self.obstacles - self.unknown
 
         self.name = name
         self.ranges_in_thor = ranges_in_thor

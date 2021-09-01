@@ -30,6 +30,7 @@ class Visualizer2D:
         self._bg_path = config.get("bg_path", None)
         self._colors = config.get("colors", {})
         self._obstacle_color = config.get("obstacle_color", (40, 3, 10))
+        self._unknown_color = config.get("unknown_color", (168, 168, 168))
         self._initialized = False
         self._rnd = random.Random(100) # sudo random for generating color
 
@@ -75,6 +76,9 @@ class Visualizer2D:
                 if (x, y) in self._region.obstacles:
                     cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
                                   self._obstacle_color, -1)
+                if (x, y) in self._region.unknown:
+                    cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
+                                  self._unknown_color, -1)
                 # Draw boundary
                 cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
                               (0, 0, 0), self._linewidth)

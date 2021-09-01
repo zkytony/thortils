@@ -6,11 +6,10 @@ from thortils.map3d import Map3D, Mapper3D
 def test_mapper(scene, floor_cut=0.1):
     controller = launch_controller({**constants.CONFIG, **{'scene': scene}})
     mapper = Mapper3D.automate(controller )
-    mapper.map.visualize()
+    # mapper.map.visualize(1)
 
     # Convert the map into a 2D grid map
-    mapper.map.to_grid_map(floor_cut=floor_cut)
-
+    mapper.map.to_grid_map(floor_cut=floor_cut, debug=True)
 
     controller.stop()
 
