@@ -96,17 +96,24 @@ class Map3D:
     def downsample(self):
         self.pcd = self.pcd.voxel_down_sample(voxel_size=0.05)
 
-    def to_grid_map(self, reachable_positions=None):
-        """Converts the 3D map of point clouds to a GridMap which is 2D."""
+    def to_grid_map(self,
+                    reachable_positions=None,
+                    ceiling_cut=1.0,
+                    floor_cut=0.1):
+        """Converts the 3D map of point clouds to a GridMap which is 2D.
+        ceiling_cut (float): The points within `ceiling_cut` range (in meters) from the ymax
+            will be regarded as "ceiling"; You may want to set this number so
+            that the hanging lights are excluded.
+        floor_cut: same as ceiling_cut, but for floors. Set this to 0.4 for FloorPlan201"""
         downpcd = self.pcd.voxel_down_sample(voxel_size=0.05)
         points = np.asarray(downpcd.points)
 
         xmax, ymax, zmax = np.max(points, axis=0)
         xmin, ymin, zmin = np.min(points, axis=0)
 
-        # Floor and ceiling points
-        floor_points_filter = np.isclose(points[:,1], ymin, atol=0.05)
-        ceiling_points_filter = np.isclose(points[:,1], ymax, atol=0.05)
+        # Boundary points
+        floor_points_filter = np.isclose(points[:,1], ymin, atol=floor_cut)
+        ceiling_points_filter = np.isclose(points[:,1], ymax, atol=ceiling_cut)
         xwalls_min_filter = np.isclose(points[:,0], xmin, atol=0.05)
         xwalls_max_filter = np.isclose(points[:,0], xmax, atol=0.05)
         zwalls_min_filter = np.isclose(points[:,0], zmin, atol=0.05)
@@ -119,27 +126,7 @@ class Map3D:
                                   zwalls_max_filter], axis=0)
         not_boundary_filter = np.logical_not(boundary_filter)
 
-        # floor_points = points[]
-        # ceiling_points = points[]
-
-        # # Points on the walls along the x axis
-        # xwalls_min = points[]
-        # xwalls_max = points[np.isclose(points[:,0], xmax, atol=0.05)]
-        # xwalls = np.concatenate((xwalls_min, xwalls_max), axis=0)
-
-        # # Points on the walls along the z axis
-        # zwalls_min = points[np.isclose(points[:,2], zmin, atol=0.05)]
-        # zwalls_max = points[np.isclose(points[:,2], zmax, atol=0.05)]
-        # zwalls = np.concatenate((zwalls_min, zwalls_max), axis=0)
-
-        # Non boundary points
-
-        # Add the floor points as free locations. Only obtain their x, z coordinates.
-        # If it is not on the floor nor the boundaries, add it as an obstacle.
-        # free_locations = floor_points[:, [0,2]]
-
-
-        # We now grab points
+        # For Debugging
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(np.asarray(points[boundary_filter]))
         o3d.visualization.draw_geometries([pcd])
@@ -147,10 +134,30 @@ class Map3D:
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(np.asarray(points[not_boundary_filter]))
         o3d.visualization.draw_geometries([pcd])
-        # points = self.points
 
 
-        import pdb; pdb.set_trace()
+
+        # The simplest 2D grid map is Floor + Non-boundary points in 2D
+        # The floor points will be reachable, and the other ones are not.
+        reachable_points = points[floor_points_filter]
+        reachable_points[:,1] = 0
+        obstacle_points = points[not_boundary_filter]
+        obstacle_points[:,1] = 0
+        reachable_colors = np.full((reachable_points.shape[0], 3), (0.7, 0.7, 0.7))
+        obstacle_colors = np.full((obstacle_points.shape[0], 3), (0.2, 0.2, 0.2))
+
+        # We now grab points
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(np.asarray(reachable_points))
+        pcd.colors = o3d.utility.Vector3dVector(np.asarray(reachable_colors))
+
+        # We now grab points
+        pcd2 = o3d.geometry.PointCloud()
+        pcd2.points = o3d.utility.Vector3dVector(np.asarray(obstacle_points))
+        pcd2.colors = o3d.utility.Vector3dVector(np.asarray(obstacle_colors))
+        o3d.visualization.draw_geometries([pcd, pcd2])
+
+
 
 
 class Mapper3D:
