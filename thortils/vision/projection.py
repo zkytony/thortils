@@ -1,3 +1,10 @@
+"""
+Projecting RGBD to and from point cloud in ai2thor.
+
+Works for both iThor and RoboThor environments.
+
+author: Kaiyu Zheng
+"""
 import random
 import math
 import numpy as np

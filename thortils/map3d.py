@@ -44,21 +44,16 @@ class Map3D:
     as well as methods to incrementally construct the map
     """
 
-    def __init__(self, points=None, colors=None):
-        if points is None:
-            points = []
-        if colors is None:
-            colors = []
-        self.points = points
-        self.colors = colors
+    def __init__(self):
+        self.pcd = o3d.geometry.PointCloud()
 
     def add(self, points, colors):
-        self.points.extend(points)
-        self.colors.extend(colors)
+        self.pcd.points.extend(np.asarray(points))
+        self.pcd.colors.extend(np.asarray(colors))
 
-    def clear(self):
-        self.points = []
-        self.colors = []
+    def add_pcd(self, pcd):
+        self.pcd.points.extend(pcd.points)
+        self.pcd.colors.extend(pcd.colors)
 
     def add_from_rgbd(self, color, depth, intrinsic, camera_pose, **kwargs):
         """
@@ -71,18 +66,14 @@ class Map3D:
         """
         pcd = pj.open3d_pcd_from_rgbd(color, depth, intrinsic, camera_pose,
                                       **kwargs)
-
-        # We could merge point clouds like this becasue ai2thor's RGBD and camera_pose is noise-free
-        self.add(np.asarray(pcd.points),
-                 np.asarray(pcd.colors))
+        # We could merge point clouds like this becasue ai2thor's RGBD and
+        # camera_pose is noise-free
+        self.add_pcd(pcd)
 
     def visualize(self, duration=None):
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(np.asarray(self.points))
-        pcd.colors = o3d.utility.Vector3dVector(np.asarray(self.colors))
         viz = o3d.visualization.Visualizer()
         viz.create_window()
-        viz.add_geometry(pcd)
+        viz.add_geometry(self.pcd)
         opt = viz.get_render_option()
         opt.show_coordinate_frame = True
         if duration is None:
@@ -93,6 +84,73 @@ class Map3D:
                 viz.poll_events()
                 viz.update_renderer()
         viz.destroy_window()
+
+    @property
+    def points(self):
+        return np.asarray(self.pcd.points)
+
+    @property
+    def colors(self):
+        return np.asarray(self.pcd.colors)
+
+    def downsample(self):
+        self.pcd = self.pcd.voxel_down_sample(voxel_size=0.05)
+
+    def to_grid_map(self, reachable_positions=None):
+        """Converts the 3D map of point clouds to a GridMap which is 2D."""
+        downpcd = self.pcd.voxel_down_sample(voxel_size=0.05)
+        points = np.asarray(downpcd.points)
+
+        xmax, ymax, zmax = np.max(points, axis=0)
+        xmin, ymin, zmin = np.min(points, axis=0)
+
+        # Floor and ceiling points
+        floor_points_filter = np.isclose(points[:,1], ymin, atol=0.05)
+        ceiling_points_filter = np.isclose(points[:,1], ymax, atol=0.05)
+        xwalls_min_filter = np.isclose(points[:,0], xmin, atol=0.05)
+        xwalls_max_filter = np.isclose(points[:,0], xmax, atol=0.05)
+        zwalls_min_filter = np.isclose(points[:,0], zmin, atol=0.05)
+        zwalls_max_filter = np.isclose(points[:,0], zmax, atol=0.05)
+        boundary_filter = np.any([floor_points_filter,
+                                  ceiling_points_filter,
+                                  xwalls_min_filter,
+                                  xwalls_max_filter,
+                                  zwalls_min_filter,
+                                  zwalls_max_filter], axis=0)
+        not_boundary_filter = np.logical_not(boundary_filter)
+
+        # floor_points = points[]
+        # ceiling_points = points[]
+
+        # # Points on the walls along the x axis
+        # xwalls_min = points[]
+        # xwalls_max = points[np.isclose(points[:,0], xmax, atol=0.05)]
+        # xwalls = np.concatenate((xwalls_min, xwalls_max), axis=0)
+
+        # # Points on the walls along the z axis
+        # zwalls_min = points[np.isclose(points[:,2], zmin, atol=0.05)]
+        # zwalls_max = points[np.isclose(points[:,2], zmax, atol=0.05)]
+        # zwalls = np.concatenate((zwalls_min, zwalls_max), axis=0)
+
+        # Non boundary points
+
+        # Add the floor points as free locations. Only obtain their x, z coordinates.
+        # If it is not on the floor nor the boundaries, add it as an obstacle.
+        # free_locations = floor_points[:, [0,2]]
+
+
+        # We now grab points
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(np.asarray(points[boundary_filter]))
+        o3d.visualization.draw_geometries([pcd])
+
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(np.asarray(points[not_boundary_filter]))
+        o3d.visualization.draw_geometries([pcd])
+        # points = self.points
+
+
+        import pdb; pdb.set_trace()
 
 
 class Mapper3D:
@@ -116,10 +174,11 @@ class Mapper3D:
         self._map.add_from_rgbd(color, depth, self.intrinsic, camera_pose, **self.config)
 
     @staticmethod
-    def automate(controller, num_stops=20, num_rotates=3,
+    def automate(controller,
+                 num_stops=20, num_rotates=4,
                  v_angles=constants.V_ANGLES,
                  h_angles=constants.H_ANGLES,
-                 rnd=random, sep=1.25, **kwargs):
+                 rnd=random, sep=1.25, downsample=True, **kwargs):
         """Automatically build a map, by randomly placing
         the agent in the environment, taking RGBD images,
         and then update the map;
@@ -142,4 +201,6 @@ class Mapper3D:
                                                      h_angles=h_angles,
                                                      rnd=rnd)
                 mapper.update(event)
+        if downsample:
+            mapper.map.downsample()
         return mapper

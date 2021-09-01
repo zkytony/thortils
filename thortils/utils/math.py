@@ -48,6 +48,14 @@ def in_range_inclusive(x, rang):
 def in_region(p, ranges):
     return in_range(p[0], ranges[0]) and in_range(p[1], ranges[1]) and in_range(p[2], ranges[2])
 
+def approx_equal(v1, v2, epsilon=1e-6):
+    if len(v1) != len(v2):
+        return False
+    for i in range(len(v1)):
+        if abs(v1[i] - v2[i]) > epsilon:
+            return False
+    return True
+
 _operations_ = ['remap',
                 'closest',
                 'normalize_angles',
@@ -58,7 +66,8 @@ _operations_ = ['remap',
                 'diff',
                 'in_range',
                 'in_range_inclusive',
-                'in_region']
+                'in_region',
+                'approx_equal']
 
 ######## Conversions
 def to_radians(th):
