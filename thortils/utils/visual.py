@@ -76,7 +76,7 @@ class Visualizer2D:
                 if (x, y) in self._region.obstacles:
                     cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
                                   self._obstacle_color, -1)
-                if (x, y) in self._region.unknown:
+                if hasattr(self._region, "unknown") and (x, y) in self._region.unknown:
                     cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
                                   self._unknown_color, -1)
                 # Draw boundary

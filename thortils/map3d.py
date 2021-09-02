@@ -315,9 +315,19 @@ class Mapper3D:
         return self.map
 
     def get_grid_map(self, **kwargs):
-        """Obtain the GridMap from current 3D map."""
+        """Obtain the GridMap from current 3D map.
+        Note: do not need to pass in grid_size or scene. Will
+            obtain that from self.controller.
+
+        Example call:
+            grid_map = mapper.get_grid_map(floor_cut=floor_cut,
+                                           ceiling_cut=ceiling_cut)
+        """
         scene = tt.thor_scene_from_controller(self.controller)
+        grid_size = tt.thor_grid_size_from_controller(self.controller)
+        kwargs["scene"] = scene
+        kwargs["grid_size"] = grid_size
+
         reachable_positions = tt.thor_reachable_positions(self.controller)
         return self.map.to_grid_map(thor_reachable_positions=reachable_positions,
-                                    scene=scene,
                                     **kwargs)
