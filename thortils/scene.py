@@ -62,6 +62,21 @@ def ithor_scene_names(scene_type="kitchen", levels=None):
             return [scenes[scene_type][i-1] for i in levels]
     raise ValueError("Unknown scene type {}".format(scene_type))
 
+def ithor_scene_type(scene):
+    if not scene.startswith("FloorPlan"):
+        raise ValueError("invalid scene name", scene)
+    number = int(scene.split("FloorPlan")[1].strip())
+    if 1 <= number <= 30:
+        return "kitchen"
+    elif 201 <= number <= 230:
+        return "living_room"
+    elif 301 <= number <= 330:
+        return "bedroom"
+    elif 401 <= number <= 430:
+        return "bathroom"
+    else:
+        raise ValueError("Unknown scene", scene)
+
 
 def convert_scene_to_grid_map(controller_or_reachable_positions,
                               scene_name, grid_size):

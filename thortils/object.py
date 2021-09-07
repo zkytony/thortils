@@ -299,3 +299,21 @@ def thor_object_receptors(event_or_controller, object_id,
                 if receptors[objid][1]["openable"] is True]
     else:
         return [receptors[objid][1] for objid in sorted_receptor_ids]
+
+
+def thor_distances_in_scene(event_or_controller, class1, class2, in_2d=True):
+    """Returns a list of euclidean distances between
+    all instances of class1 and all instances of class2"""
+    class1_poses = thor_object_poses(event_or_controller, class1)
+    class2_poses = thor_object_poses(event_or_controller, class2)
+    dists = []
+    for objid1 in class1_poses:
+        p1 = class1_poses[objid1]
+        if in_2d:
+            p1 = (p1[0], p1[2])
+        for objid2 in class2_poses:
+            p2 = class2_poses[objid2]
+            if in_2d:
+                p2 = (p2[0], p2[2])
+            dists.append(euclidean_dist(p1, p2))
+    return dists

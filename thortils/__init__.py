@@ -20,7 +20,8 @@ from .object import (thor_all_object_types,
                      thor_object_in_fov,
                      thor_object_of_type_in_fov,
                      thor_object_in_receptacle,
-                     thor_object_receptors)
+                     thor_object_receptors,
+                     thor_distances_in_scene)
 from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
@@ -44,7 +45,9 @@ from .interactions import (OpenObject,
                            PullObject,
                            RemoveFromScene)
 
-from .scene import (robothor_scene_names, ithor_scene_names,
+from .scene import (robothor_scene_names,
+                    ithor_scene_names,
+                    ithor_scene_type,
                     convert_scene_to_grid_map,
                     proper_convert_scene_to_grid_map)
 
