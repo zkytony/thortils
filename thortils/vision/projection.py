@@ -127,16 +127,6 @@ def inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv=None):
     else:
         return (x_c, y_c, z_c)
 
-def inverse_projection_to_grid(u, v, d, intrinsic, grid_map, camera_pose_or_extrinsic_inv):
-    """Maps the given image plane location (u,v) and depth d to a location on the
-    given grid map (GridMap). The GridMap is 2D. Note
-    """
-    x_w, y_w, z_w = inverse_projection(u, v, d, intrinsic, camera_pose_or_extrinsic_inv)
-    grid_x, grid_y = grid_map.to_grid_pos(x_w, z_w)
-    # Because of the z-axis inversion documented in inverse_projection, we need to revert z coordinate
-    grid_y = grid_map.length - grid_y
-    return grid_x, grid_y
-
 def projection(x, y, z, intrinsic, camera_pose_or_extrinsic=None):
     """Converts (x,y,z) in world frame (or camera frame, if
     camera_pose_or_extrinsic is None) to the image plane.
@@ -289,16 +279,17 @@ def rgbd_from_pcd(points, colors,
     outd = np.flip(outd, 1)
     return outrgb, outd
 
-def project_bbox_to_grids(bbox, depth, grid_map, intrinsic,
-                          camera_pose=None, rgb=None, einv=None,
-                          downsample=0.1):
+
+def thor_project_bbox(bbox, depth, intrinsic,
+                      camera_pose=None, rgb=None, einv=None,
+                      downsample=0.1, grid_map=None):
     """
-    downsample: the percentage of pixels remaining in the bounding box
-    used to convert to grids.
+    Projects bounding box to world-frame points in thor coordinates.
+    If `grid_map` is provided, map it to grid
     """
     width, height = intrinsic[:2]
     x1, y1, x2, y2 = bbox
-    grids = []
+    wfpoints = []  # points in thor frame.
     if einv is None:
         assert camera_pose is not None, "must supply camera pose if not providing extrinsic inverse"
         einv = extrinsic_inv(camera_pose)
@@ -313,13 +304,35 @@ def project_bbox_to_grids(bbox, depth, grid_map, intrinsic,
         v = clip(bv, 0, height-1)
         u = clip(bu, 0, width-1)
         d = depth[v, u]
-        x, y = inverse_projection_to_grid(u, v, d,
-                                          intrinsic,
-                                          grid_map,
-                                          einv)
-        grids.append((x, y))
+        x_w, y_w, z_w = inverse_projection(u, v, d, intrinsic, einv)
+        wfpoints.append((x_w, y_w, -z_w))  # see docs of inverse_projection.
+
     if rgb is not None:
         color = mean_rgb(rgb[y1:y2, x1:x2]).tolist()
+        return wfpoints, color
+    else:
+        return wfpoints
+
+
+def project_bbox_to_grids(bbox, depth, grid_map, intrinsic,
+                          camera_pose=None, rgb=None, einv=None,
+                          downsample=0.1):
+    """
+    downsample: the percentage of pixels remaining in the bounding box
+    used to convert to grids.
+    """
+    res = thor_project_bbox(bbox, depth, intrinsic,
+                            camera_pose=camera_pose,
+                            rgb=rgb, einv=einv, downsample=downsample)
+    if len(res) == 2:
+        wfpoints, color = res
+    else:
+        wfpoints = res
+
+    grids = []
+    for thor_x, _, thor_z in wfpoints:
+        grids.append(grid_map.to_grid_pos(thor_x, thor_z))
+    if rgb is not None:
         return grids, color
     else:
         return grids
