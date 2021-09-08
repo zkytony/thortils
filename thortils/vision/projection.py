@@ -302,17 +302,22 @@ def project_bbox_to_grids(bbox, depth, grid_map, intrinsic,
     if einv is None:
         assert camera_pose is not None, "must supply camera pose if not providing extrinsic inverse"
         einv = extrinsic_inv(camera_pose)
-    for bv in tqdm(range(y1, y2)):
-        for bu in range(x1, x2):
-            if random.uniform(0,1) < (1-downsample): # only keep 5% of pixels
-                v = clip(bv, 0, height-1)
-                u = clip(bu, 0, width-1)
-                d = depth[v, u]
-                x, y = inverse_projection_to_grid(u, v, d,
-                                                  intrinsic,
-                                                  grid_map,
-                                                  einv)
-                grids.append((x, y))
+
+    # number of points from the bbox to project - projecting all will be slow and unnecessary
+    num_points = max(int(round((y2-y1)*(x2-x1)*downsample)), 30)
+    xv, yv = np.meshgrid(np.arange(x1, x2), np.arange(y1, y2))
+    positions = np.vstack([xv.ravel(), yv.ravel()]).transpose()
+    sampled_positions = positions[np.random.choice(len(positions), num_points)]
+
+    for bu, bv in tqdm(sampled_positions, desc="bbox->grids"):
+        v = clip(bv, 0, height-1)
+        u = clip(bu, 0, width-1)
+        d = depth[v, u]
+        x, y = inverse_projection_to_grid(u, v, d,
+                                          intrinsic,
+                                          grid_map,
+                                          einv)
+        grids.append((x, y))
     if rgb is not None:
         color = mean_rgb(rgb[y1:y2, x1:x2]).tolist()
         return grids, color

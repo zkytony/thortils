@@ -16,7 +16,7 @@ from thortils.utils.visual import GridMapVisualizer
 CLASSES = {"Fridge", "CoffeeMachine", "Toaster"}
 
 # If rotate three times
-CLASSES = {"Book", "CounterTop"}
+CLASSES = {"Book", "CounterTop", "Apple"}
 
 def test_project_object_detection():
     parser = argparse.ArgumentParser(
@@ -57,7 +57,7 @@ def test_project_object_detection():
         print("Projecting bounding box for {}".format(cls))
         points, color = pj.project_bbox_to_grids(bboxes[objectId], depth, grid_map,
                                                  intrinsic, rgb=rgb, einv=einv,
-                                                 downsample=0.05)
+                                                 downsample=0.01)
         detgrids[objectId] = (cls, color, points)
 
     # highlight

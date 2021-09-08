@@ -19,3 +19,4 @@ def plot_one_box(img, xyxy, label, color, line_thickness=3, show_label=True):
         cv2.putText(img, label,
                     (x1, y1 - 2), 0, tl / 3, [255, 255, 255],
                     thickness=tf, lineType=cv2.LINE_AA)
+    return img

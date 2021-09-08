@@ -68,6 +68,25 @@ def normalized_xywh_to_xyxy(xywh, size, center=True):
         y2 = int(round(y + h))
     return x1, y1, x2, y2
 
+def shrink_bbox(xyxy, bbox_margin):
+    """
+    Returns a new xyxy bbox with the dimensions
+    shrunk by 1.0 - `bbox_margin` ratio.
+    """
+    if type(bbox_margin) == float:
+        x1, y1, x2, y2 = xyxy
+        box_w = x2 - x1
+        box_h = y2 - y1
+        diff_w = box_w - box_w*(1.0 - bbox_margin)
+        diff_h = box_h - box_h*(1.0 - bbox_margin)
+        new_x1 = int(round(x1 + diff_w / 2))
+        new_y1 = int(round(y1 + diff_h / 2))
+        new_x2 = int(round(x2 - diff_w / 2))
+        new_y2 = int(round(y2 - diff_h / 2))
+        return (new_x1, new_y1, new_x2, new_y2)
+    else:
+        raise ValueError("Currently shrink_bbox only works with bbox_margin as a ratio")
+
 
 def saveimg(img, path):
     """
