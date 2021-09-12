@@ -21,7 +21,8 @@ from .object import (thor_all_object_types,
                      thor_object_of_type_in_fov,
                      thor_object_in_receptacle,
                      thor_object_receptors,
-                     thor_distances_in_scene)
+                     thor_distances_in_scene,
+                     thor_objects_height_range)
 from .agent import (thor_reachable_positions,
                     thor_agent_pose,
                     thor_agent_position,
