@@ -317,3 +317,17 @@ def thor_distances_in_scene(event_or_controller, class1, class2, in_2d=True):
                 p2 = (p2[0], p2[2])
             dists.append(euclidean_dist(p1, p2))
     return dists
+
+
+def thor_objects_height_range(event_or_controller):
+    """
+    Returns a tuple (min_height, max_height), in thor coordinates,
+    that represents the minimum and maximum height any object could
+    be in the given event or controller
+    """
+    event = _resolve(event_or_controller)
+    thor_objects = thor_get(event, "objects")
+
+    object_y_coords = [obj["position"]["y"]
+                       for obj in thor_objects]
+    return min(object_y_coords), max(object_y_coords)

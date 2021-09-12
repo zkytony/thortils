@@ -245,6 +245,10 @@ class GridMapVisualizer(Visualizer2D):
 
     def highlight(self, img, locations, thor=False, **params):
         if thor:
-            locations = [self._grid_map.to_grid_pos(thor_x, thor_y)
-                         for thor_x, thor_y in locations]
+            if len(locations[0]) == 2:
+                locations = [self._grid_map.to_grid_pos(thor_x, thor_z)
+                             for thor_x, thor_z in locations]
+            else:
+                locations = [self._grid_map.to_grid_pos(thor_x, thor_z)
+                             for thor_x, _, thor_z in locations]
         return super().highlight(img, locations, **params)
