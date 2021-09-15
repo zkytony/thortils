@@ -129,6 +129,7 @@ class Visualizer2D:
         img = cv2.flip(img, 1)  # flip horizontally
         pygame.surfarray.blit_array(self._display_surf, img)
         pygame.display.flip()
+        return img
 
     def get_color(self, objid, colors=None, alpha=1.0):
         """

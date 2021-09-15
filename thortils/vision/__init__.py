@@ -21,3 +21,13 @@ def thor_object_bboxes(event_or_controller):
      Lower Right xx, Lower Right yy],"""
     event = _resolve(event_or_controller)
     return event.instance_detections2D
+
+def thor_topdown_img(controller, cv2=True):
+    controller.step(action="ToggleMapView")
+    event = controller.step(action="Pass")
+    event = controller.step(action="Pass")
+    frame_topdown = thor_img(event, cv2=cv2)
+    controller.step(action="ToggleMapView")
+    event = controller.step(action="Pass")
+    event = controller.step(action="Pass")
+    return frame_topdown
