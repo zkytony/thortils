@@ -28,6 +28,7 @@ class Visualizer2D:
         self._region = config.get("region", None)
         self._linewidth = config.get("linewidth", 1)
         self._bg_path = config.get("bg_path", None)
+        self._bg_img = config.get("bg_img", None)
         self._colors = config.get("colors", {})
         self._obstacle_color = config.get("obstacle_color", (40, 3, 10))
         self._unknown_color = config.get("unknown_color", (168, 168, 168))
@@ -60,15 +61,22 @@ class Visualizer2D:
         pygame.display.quit()
         pygame.quit()
 
+    def set_bg(self, bgimg):
+        self._bg_img = bgimg
+
     def _make_gridworld_image(self, r):
         # Preparing 2d array
         w, l = self._region.width, self._region.length
         img = np.full((w*r, l*r, 4), 255, dtype=np.uint8)
 
         # Make an image of grids
-        if self._bg_path is not None:
+        bgimg = None
+        if self._bg_img is not None:
+            bgimg = self._bg_img
+        elif self._bg_path is not None:
             bgimg = cv2.imread(self._bg_path, cv2.IMREAD_UNCHANGED)
             bgimg = cv2.resize(bgimg, (w*r, l*r))
+        if bgimg is not None:
             img = overlay(img, bgimg, opacity=1.0)
 
         for x in range(w):
