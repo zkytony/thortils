@@ -75,18 +75,21 @@ class Visualizer2D:
             bgimg = self._bg_img
         elif self._bg_path is not None:
             bgimg = cv2.imread(self._bg_path, cv2.IMREAD_UNCHANGED)
-            bgimg = cv2.resize(bgimg, (w*r, l*r))
         if bgimg is not None:
+            bgimg = cv2.resize(bgimg, (w*r, l*r))
             img = overlay(img, bgimg, opacity=1.0)
 
         for x in range(w):
             for y in range(l):
-                if (x, y) in self._region.obstacles:
-                    cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
-                                  self._obstacle_color, -1)
-                if hasattr(self._region, "unknown") and (x, y) in self._region.unknown:
-                    cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
-                                  self._unknown_color, -1)
+                if self._obstacle_color is not None:
+                    if (x, y) in self._region.obstacles:
+                        cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
+                                      self._obstacle_color, -1)
+
+                if self._unknown_color is not None:
+                    if hasattr(self._region, "unknown") and (x, y) in self._region.unknown:
+                        cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
+                                      self._unknown_color, -1)
                 # Draw boundary
                 cv2.rectangle(img, (y*r, x*r), (y*r+r, x*r+r),
                               (0, 0, 0), self._linewidth)
