@@ -45,8 +45,7 @@ Code related to Ai2-Thor. Try to do one thing once.
    ...................
    ...................
    ```
-
-  (note: this is only a test; this grid map is not actually an accurate reflection of the scene. See [this example](https://github.com/zkytony/thortils/blob/v3.3.4/tests/test_project_object_detection_gridmap.py#L34) for obtaining the grid map by projecting the 3D map down to 2D.)
+    (note: this is only a test; this grid map is not actually an accurate reflection of the scene. See [this example](https://github.com/zkytony/thortils/blob/v3.3.4/tests/test_project_object_detection_gridmap.py#L34) for obtaining the grid map by projecting the 3D map down to 2D.)
    
 
 ## Organization
