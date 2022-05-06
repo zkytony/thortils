@@ -73,6 +73,12 @@ The branches of thortils are named after the version it is built for. Currently,
 you can create a branch on top of this one, and run tests under `tests/`, and fix bugs due to the Ai2-THOR version upgrade. The API of thortils 
 should stay the same or could be expanded.
 
+## Projects that use thortils
+
+* [COS-POMDP](https://github.com/zkytony/cos-pomdp): Code for "Towards Optimal Correlational Object Search" (ICRA 2022)
+* [ai2thor-web](https://github.com/zkytony/ai2thor-web): Running AI2-THOR in browser to conduct user studies with non-technical, remote participants.
+
+
 ## Citation
 If you find this package useful, please cite the paper "[_Towards Optimal Correlational Object Search_](https://kaiyuzheng.me/documents/papers/cospomdp-icra22-full.pdf), International Conference on Robotics and Automation (ICRA), 2022.
 ```
