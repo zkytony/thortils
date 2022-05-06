@@ -118,7 +118,7 @@ The codebase for this paper, a good example of using this package, is here: http
    
    <img src="https://user-images.githubusercontent.com/7720184/167220947-f7c5281d-ed1f-4b97-aec7-db89193d43e6.png" width="500px">
 
-    Note that the coordinates of this grid map are 0-based integers (instead of metric), which
+   Note that the coordinates of this grid map are 0-based integers (instead of metric), which
    can be more convenient to work with. The granularity depends on the `grid_size` setting of the Ai2-THOR controller.
 
 ## Installation
