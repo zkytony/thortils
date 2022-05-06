@@ -266,6 +266,6 @@ a | Agent pose: ((-1.25, 0.9009995460510254, 1.0), (-0.0, 225.0, 0.0))
 
 ## Contributor
 
-[Kaiyu Zheng](https://kaiyuzheng.me/)
+* [Kaiyu Zheng](https://kaiyuzheng.me/)
 
 Feel free to open issues about mistakes, or contribute directly by sending pull requests (to this REAdME documentation or to the codebase in general).
