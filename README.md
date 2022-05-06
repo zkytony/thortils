@@ -73,6 +73,18 @@ The branches of thortils are named after the version it is built for. Currently,
 you can create a branch on top of this one, and run tests under `tests/`, and fix bugs due to the Ai2-THOR version upgrade. The API of thortils 
 should stay the same or could be expanded.
 
+## Citation
+If you find this package useful, please cite the paper "[_Towards Optimal Correlational Object Search_](https://kaiyuzheng.me/documents/papers/cospomdp-icra22-full.pdf), International Conference on Robotics and Automation (ICRA), 2022.
+```
+@inproceedings{zheng2022towards,
+  title={Towards Optimal Correlational Object Search,
+  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
+  author={Zheng, Kaiyu and Chitnis, Rohan and Sung, Yoonchang and Konidaris, George and Tellex, Stefanie},
+  year={2022}
+}
+```
+The codebase for this paper, a good example of using this package, is here: https://github.com/zkytony/cos-pomdp
+
 
 ## Proper 2D Grid Map
 
@@ -103,7 +115,7 @@ should stay the same or could be expanded.
     Note that the coordinates of this grid map are 0-based integers (instead of metric), which
    can be more convenient to work with. The granularity depends on the `grid_size` setting of the Ai2-THOR controller.
 
-## Setup
+## Installation
 
 1. Clone the repository and then install it by:
    ```
@@ -169,9 +181,7 @@ Inside thortils/:
 * utils.py: Non-Thor related utility functions
 
 
-## Documentations
-
-
+## Notes on the Codebase
 
 ### Poses
 
@@ -204,7 +214,8 @@ of parameters. For navigation actions, we also use a format as follows:
 We sometimes call variables "action\_delta" or "delta" to refer to `(forward, h_angle, v_angle)`
 
 
-## Tips
+## Command Line Usage
+This is only a few functions among all that you can run on the command line.
 
 ### Start controller
 ```
