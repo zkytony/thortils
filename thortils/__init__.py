@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 from . import constants
 from .controller import (_resolve,
                          thor_get,

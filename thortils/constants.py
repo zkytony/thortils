@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 #-------------------------------------------------------------------------------
 # Overall Ai2Thor parameters (v2.7.2)
 GRID_SIZE = 0.25

@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 import datetime
 import pytz
 from pytz import reference as pytz_reference

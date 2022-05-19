@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 # Utility functions regarding objects
 #
 # Note: For all functions that return pose,

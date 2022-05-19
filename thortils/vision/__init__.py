@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 from ..controller import _resolve, thor_get
 
 def thor_img(event_or_controller, cv2=True):

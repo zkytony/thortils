@@ -1,3 +1,7 @@
+# Copyright 2022 Kaiyu Zheng
+# 
+# Usage of this file is licensed under the MIT License.
+
 """
 Navigation in ai2thor; pose transform is generic, but pose
 convention follows ai2thor as below.
